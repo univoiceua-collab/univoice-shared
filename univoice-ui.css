@@ -1,0 +1,339 @@
+/* ==========================================================
+   UNIVOICE — СПІЛЬНІ СТИЛІ ДЛЯ ВСІХ СТОРІНОК (univoice-ui.css)
+   Підключається на кожній сторінці ПЕРЕД стилями самої сторінки.
+   Тут: кольори, база, меню, загальні компоненти, попапи, кнопки,
+   діалоги, налаштування і підпис, загальний адаптив.
+   Стилі, потрібні лише одній сторінці, лишаються в її CSS-блоці в Tilda.
+
+   ЗМІСТ
+   1. Змінні (дизайн-система)
+   2. База
+   3. Сайдбар і мобільне меню
+   4. Компоненти: шапка, таби, картка, поля, плитки, тултіпи,
+      списки, чекбокси, інфоблок, панель результату
+   5. Попапи, кнопки, діалоги
+   6. Налаштування і підпис
+   7. Адаптив
+   ========================================================== */
+
+/* ---------- 1. ЗМІННІ ---------- */
+:root {
+    --bg-overscroll: #121212;
+    --bg-gradient: none;
+    --bg-panel: #151515;
+    --bg-card: #1e1e1e;
+    --bg-input: #2a2a2a;
+    --bg-input-hover: #333333;
+    --bg-tooltip: #333333;
+    --bg-modal: transparent;
+    --bg-time: rgba(0, 0, 0, 0.2);
+    --bg-dop: rgba(50, 50, 50, 0.2);
+
+    --menu-bg: #151515;
+    --menu-border: #2a2a2a;
+    --menu-text: #888888;
+
+    --text-main: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #b0b0b0;
+    --text-hint: #888888;
+    --text-tooltip: #ffffff;
+    --text-on-accent: #111111;
+
+    --accent: #feca01;
+    --accent-hover: #fede1b;
+    --accent-transparent: rgba(254, 202, 1, 0.1);
+
+    --border-color: #2a2a2a;
+    --border-input: #333333;
+
+    --font-main: 'Onest', sans-serif;
+    --font-heading: 'Unbounded', sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --shadow-modal: 0 30px 60px rgba(0, 0, 0, 0.8);
+    --shadow-accent: 0 8px 20px rgba(254, 202, 1, 0.2);
+    --shadow-tooltip: 0 5px 15px rgba(0, 0, 0, 0.5);
+
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+}
+
+/* ---------- 2. БАЗА ---------- */
+html { background-color: var(--bg-overscroll); transition: background-color var(--transition-normal); }
+body { margin: 0; padding: 0; min-height: 100vh; background: var(--bg-overscroll) var(--bg-gradient) no-repeat fixed; background-size: cover; color: var(--text-main); font-family: var(--font-main); -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent; touch-action: pan-y; overscroll-behavior: none; transition: background-color var(--transition-normal), color var(--transition-normal); }
+html, body { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+body.modal-open { overflow: hidden; height: 100vh; }
+* { outline: none !important; box-sizing: border-box; }
+[hidden] { display: none !important; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+
+.container { min-height: 100vh; padding: 25px 20px; display: flex; flex-direction: column; align-items: center; width: 100%; transition: padding-left var(--transition-normal); overflow-x: hidden; }
+.vo-desktop-grid { width: 100%; }
+
+/* ---------- 3. САЙДБАР (ДЕСКТОП) І МОБІЛЬНЕ МЕНЮ ---------- */
+.vo-sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 60px; background: var(--menu-bg); border-right: 1px solid var(--menu-border); z-index: 1100; transition: width var(--transition-normal); display: flex; flex-direction: column; overflow: hidden; white-space: nowrap; }
+.vo-sidebar:hover { width: 240px; }
+.vo-sidebar-logo-box { display: flex; align-items: center; height: 76px; padding-left: 16px; cursor: pointer; transition: background-color var(--transition-normal); }
+.vo-svg-logo { filter: brightness(0) invert(1); transition: filter var(--transition-normal); }
+.vo-sidebar-logo-box:hover .vo-svg-logo, .vo-mobile-menu-logo:hover .vo-svg-logo { filter: none; }
+.vo-logo-switcher { position: relative; width: 28px; height: 30px; display: flex; align-items: center; overflow: hidden; transition: width var(--transition-normal); }
+.vo-sidebar:hover .vo-logo-switcher { width: 160px; }
+.vo-logo-small, .vo-logo-full-sidebar { position: absolute; left: 0; transition: opacity 0.2s ease, transform 0.2s ease; }
+.vo-logo-small { width: 28px; }
+.vo-logo-full-sidebar { width: 131.5px; opacity: 0; transform: translate(5.5px, 1.5px); }
+.vo-sidebar:hover .vo-logo-small { opacity: 0; }
+.vo-sidebar:hover .vo-logo-full-sidebar { opacity: 1; }
+.vo-sidebar-divider { height: 1px; background-color: var(--menu-border); width: 100%; }
+.vo-sidebar-item { display: flex; align-items: center; padding: 20px 0 0; color: var(--menu-text); cursor: pointer; transition: var(--transition-normal); }
+.vo-sidebar-item--bottom { margin-top: auto; padding: 0 0 20px; }
+.vo-sidebar-item:hover, .vo-sidebar-item.active { color: var(--accent); }
+a.vo-sidebar-item, a.vo-mobile-item { text-decoration: none; }
+/* Пункти меню без посилання приховані (крім поточної сторінки). Додайте href — і пункт з'явиться автоматично */
+a.vo-sidebar-item:not(.active):not([href]), a.vo-sidebar-item:not(.active)[href=""], a.vo-sidebar-item:not(.active)[href="#"],
+a.vo-mobile-item:not(.active):not([href]), a.vo-mobile-item:not(.active)[href=""], a.vo-mobile-item:not(.active)[href="#"] { display: none; }
+.vo-sidebar-icon { width: 60px; min-width: 60px; display: flex; justify-content: center; font-size: 20px; }
+.vo-sidebar-text { opacity: 0; font-size: 15px; font-weight: 500; transition: opacity var(--transition-normal); padding-right: 20px; margin-left: -12px; }
+.vo-sidebar:hover .vo-sidebar-text { opacity: 1; }
+
+.vo-mobile-overlay { position: fixed; inset: -50px; background: rgba(0,0,0,0.4); z-index: 1050; backdrop-filter: blur(5px); opacity: 0; visibility: hidden; transition: all var(--transition-normal); }
+.vo-mobile-overlay.active { opacity: 1; visibility: visible; }
+.vo-mobile-menu { position: fixed; top: 0; right: -300px; width: 260px; height: 100vh; background: var(--menu-bg); border-left: 1px solid var(--menu-border); z-index: 1100; transition: right var(--transition-normal); padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; scrollbar-width: none; }
+.vo-mobile-menu.active { right: 0; }
+.vo-mobile-menu-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px 0; }
+.vo-mobile-menu-logo { cursor: pointer; }
+.vo-mobile-menu-logo img { height: 40px; margin-top: 5px; }
+.vo-mobile-menu .vo-sidebar-divider { margin-bottom: 15px; }
+.vo-mobile-settings-btn { background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; padding: 10px; }
+.vo-mobile-settings-btn:active { color: var(--accent) !important; }
+.vo-mobile-item { color: #ccc; font-size: 18px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 5px 0; transition: var(--transition-normal); }
+.vo-mobile-item:hover, .vo-mobile-item.active { color: var(--accent); }
+.vo-mobile-item i { width: 24px; text-align: center; }
+
+/* ---------- 4. КОМПОНЕНТИ ---------- */
+/* Шапка */
+.vo-header-title { font-family: var(--font-heading); font-weight: 700; font-size: 18px; line-height: 1.2; margin: 0; }
+.vo-how-it-works-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-main); font-size: 14px; font-weight: 500; transition: all var(--transition-normal); }
+.vo-how-it-works-btn i { font-size: 16px; transition: color var(--transition-normal); }
+.vo-how-it-works-btn:hover, .vo-how-it-works-btn:hover i { border-color: var(--accent); color: var(--accent); }
+
+/* Таби */
+.vo-tabs-container { display: flex; width: 100%; gap: 5px; margin-bottom: -1px; overflow-x: auto; scrollbar-width: none; }
+.vo-tab { flex: 1; min-width: 80px; padding: 18px 10px; background: var(--bg-panel); border: 1px solid transparent; border-bottom: none; border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--text-hint); font-family: var(--font-main); font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; white-space: nowrap; transition: none; z-index: 1; backdrop-filter: blur(5px); }
+.vo-tab.active { background: var(--bg-card); color: var(--accent); border-color: var(--border-color); border-bottom: 2px solid var(--bg-card); margin-bottom: -1px; z-index: 3; backdrop-filter: none; }
+
+/* Картка */
+.vo-widget-wrapper { background: var(--bg-card); border-radius: 0 0 var(--radius-xl) var(--radius-xl); padding: 25px 30px 40px; width: 100%; box-shadow: var(--shadow-main); border: 1px solid var(--border-color); color: var(--text-secondary); position: relative; z-index: 2; transition: background-color var(--transition-normal), border-color var(--transition-normal); }
+.vo-group { margin-bottom: 35px; }
+.vo-group.vo-type-group { margin-bottom: 25px; }
+.vo-label { display: block; font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text-main); }
+.vo-label--sm { margin-bottom: 10px; font-size: 14px; }
+
+/* Текст + хронометраж / сторінки / символи */
+.vo-textarea-block { background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); overflow: hidden; transition: border-color var(--transition-normal); }
+.vo-textarea-block:focus-within { border-color: var(--accent); }
+.vo-textarea { width: 100%; border: none; background: transparent; padding: 16px; color: var(--text-main); resize: vertical; min-height: 120px; font-family: inherit; font-size: 16px; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+.vo-textarea::placeholder { color: var(--text-hint); }
+.vo-textarea::-webkit-scrollbar { display: block; width: 16px; }
+.vo-textarea::-webkit-scrollbar-track { background: transparent; }
+.vo-textarea::-webkit-scrollbar-thumb { background-color: var(--accent); border-radius: 10px; border: 4px solid transparent; background-clip: padding-box; margin-top: 10px; }
+.vo-textarea-footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; padding: 12px 16px; background-color: var(--bg-time); border-top: 1px solid var(--border-input); transition: background-color var(--transition-normal); }
+.vo-text-stats { font-size: 13px; color: var(--text-hint); }
+.vo-text-stats span { color: var(--text-main); font-weight: 500; }
+.vo-time-inputs { display: flex; gap: 10px; align-items: center; }
+.vo-time-item { display: flex; align-items: center; gap: 6px; }
+.vo-time-unit { font-size: 13px; color: var(--text-hint); }
+.vo-time-input-small { width: 50px; text-align: center; padding: 10px 5px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-main); border-radius: var(--radius-sm); font-family: inherit; font-size: 16px; -moz-appearance: textfield; outline: none; transition: border-color var(--transition-normal), background-color var(--transition-normal); }
+#voChars { width: 80px; }
+.vo-time-input-small:focus { border-color: var(--accent); }
+.vo-time-input-small::-webkit-outer-spin-button, .vo-time-input-small::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+/* Поле заблоковане, коли об'єм рахується з тексту */
+.vo-time-input-small[readonly] { border-style: dashed; background: transparent; color: var(--text-main); cursor: default; pointer-events: none; }
+
+/* Радіо-плитки (рівень диктора, обробка) */
+.vo-status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.vo-status-option input { display: none; }
+.vo-status-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px 12px 16px; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; transition: all var(--transition-normal); color: var(--text-muted); }
+.vo-status-option input:checked + .vo-status-label { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); box-shadow: var(--shadow-accent); }
+.vo-status-option input:checked + .vo-status-label .vo-tooltip { color: var(--text-on-accent); }
+
+/* Тултіпи "і" */
+.vo-tooltip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; color: var(--text-hint); transition: var(--transition-normal); margin-left: 6px; cursor: help; }
+.vo-tooltip.active { color: var(--accent); }
+.vo-tooltip-text { --dx: 0px; visibility: hidden; width: 270px; max-width: calc(100vw - 32px); background-color: var(--bg-tooltip); color: var(--text-tooltip); text-align: left; border-radius: var(--radius-sm); padding: 12px 14px; position: absolute; z-index: 9999; top: 130%; right: -10px; font-size: 12px; font-weight: 400; opacity: 0; transition: opacity var(--transition-normal); pointer-events: none; box-shadow: var(--shadow-tooltip); white-space: normal; line-height: 1.5; transform: translateX(var(--dx)); }
+.vo-tooltip-text::after { content: ""; position: absolute; bottom: 100%; right: calc(18px + var(--dx)); border-width: 5px; border-style: solid; border-color: transparent transparent var(--bg-tooltip) transparent; }
+.vo-tooltip.active .vo-tooltip-text { visibility: visible; opacity: 1; }
+@media (hover: hover) {
+    .vo-tooltip:hover { color: var(--accent); }
+    .vo-tooltip:hover .vo-tooltip-text { visibility: visible; opacity: 1; }
+}
+
+/* Випадаючі списки */
+.vo-select { width: 100%; padding: 14px 16px; border: 1px solid var(--border-input); border-radius: var(--radius-md); font-family: inherit; font-size: 16px; background: var(--bg-input) url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat calc(100% - 16px) center / 16px; color: var(--text-main); transition: all var(--transition-normal); appearance: none; cursor: pointer; }
+.vo-select:focus { border-color: var(--accent); background-color: var(--bg-input-hover); background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E"); }
+.vo-select:disabled { background-image: none !important; cursor: default; opacity: 1; color: var(--text-main); -webkit-text-fill-color: var(--text-main); background-color: var(--bg-input); border-style: dashed; }
+.vo-select-row { display: flex; gap: 10px; width: 100%; }
+.vo-select-col { flex: 1; min-width: 0; }
+.vo-select-row .vo-select { padding-right: 38px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+.vo-select-pair { display: flex; gap: 10px; width: 100%; }
+.vo-select-pair > .vo-select { flex: 1; }
+.vo-select-hint { font-size: 10px; color: var(--text-hint); margin-top: 6px; padding-left: 12px; min-height: 12px; }
+
+/* Чекбокси-опції */
+.vo-checkbox-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.vo-checkbox-label { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); transition: var(--transition-normal); height: 100%; }
+.vo-checkbox-label:hover { background: var(--bg-input-hover); }
+.vo-checkbox-label input { display: none; }
+.vo-checkmark { width: 22px; height: 22px; border: 2px solid var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition-fast); }
+.vo-checkbox-label input:checked + .vo-checkmark { background-color: var(--accent); border-color: var(--accent); }
+.vo-checkbox-label input:checked + .vo-checkmark::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-on-accent); font-size: 14px; }
+.vo-checkbox-text { font-size: 14px; line-height: 1.4; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; flex: 1; min-width: 0; }
+.vo-checkbox-text strong { color: var(--text-main); }
+
+/* Права + блок про AI */
+.vo-legal-block { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; background: var(--bg-dop); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border-input); margin-bottom: 20px; transition: background-color var(--transition-normal); }
+.vo-rights-section { flex: 1 1 200px; }
+.vo-ai-section { flex: 1 1 200px; font-size: 10px; color: var(--text-hint); line-height: 1.5; border-left: 1px solid var(--border-input); padding-left: 20px; }
+.vo-ai-section > i { color: var(--accent); margin-bottom: 8px; font-size: 16px; }
+
+/* Нижня панель: ціна + кнопки */
+.vo-result-card { margin-top: 30px; background: linear-gradient(135deg, #feca01, #fede1b); padding: 20px 25px; border-radius: var(--radius-lg); color: #111; box-shadow: var(--shadow-accent); transition: background var(--transition-normal); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }
+.vo-result-value { font-family: var(--font-heading); font-size: 32px; font-weight: 700; }
+.vo-action-buttons { display: flex; gap: 10px; align-items: center; padding-left: 20px; }
+.vo-icon-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 18px; transition: all 0.2s ease; position: relative; background: rgba(0,0,0,0.1); color: #111; }
+.vo-icon-btn:hover { background: rgba(0,0,0,0.2); transform: translateY(-2px); }
+.vo-cart-badge { position: absolute; top: -5px; right: -5px; background: #ff4757; color: #fff; font-size: 11px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-family: var(--font-main); }
+.vo-cart-badge.show { opacity: 1; }
+
+.vo-placeholder { text-align: center; padding: 60px 20px; }
+.vo-placeholder i { font-size: 40px; color: var(--text-hint); margin-bottom: 15px; }
+
+/* ---------- 5. ПОПАПИ, КНОПКИ, ДІАЛОГИ ---------- */
+.vo-modal-overlay { position: fixed; inset: -50px; background: var(--bg-modal); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); cursor: pointer; }
+.vo-modal-overlay.is-open { display: flex; }
+.vo-modal-content { background: var(--bg-card); border-radius: var(--radius-lg); width: 90vw; max-width: 700px; padding: 40px 30px; border: 1px solid var(--border-input); color: var(--text-secondary); position: relative; max-height: 85vh; overflow-y: auto; margin: auto; scrollbar-width: none; box-shadow: var(--shadow-modal); cursor: default; }
+.vo-modal-content h3 { font-family: var(--font-heading); margin-bottom: 20px; color: var(--text-main); font-size: 20px; margin-top: 0; }
+#voModal .vo-modal-content { cursor: pointer; }
+
+/* Текст попапу "Як це працює" */
+.vo-info { font-family: var(--font-main); color: var(--text-secondary); line-height: 1.6; font-size: 14px; }
+.vo-info > p { margin-bottom: 15px; }
+.vo-info-note { padding: 12px 15px; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 13px; border-left: 3px solid var(--accent); }
+.vo-info-note > i { color: var(--accent); margin-right: 5px; }
+.vo-info ul { padding-left: 0; list-style-type: none; margin-top: 10px; }
+.vo-info li { margin-bottom: 20px; }
+.vo-info li:last-child { margin-bottom: 0; }
+.vo-info li > strong { color: var(--text-main); font-size: 15px; }
+.vo-info li > strong > i { color: var(--accent); margin-right: 8px; }
+.vo-info li > div { margin-top: 5px; padding-left: 24px; }
+.vo-info-tip { color: var(--text-hint); display: block; margin-top: 5px; }
+
+/* Кнопка закриття попапу (кругла, 36px) */
+.vo-modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-input); border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: color var(--transition-fast), background-color var(--transition-fast); }
+.vo-modal-close:hover { color: var(--accent); background: var(--bg-input-hover); }
+/* Стандартне текстове поле (.vo-settings-input — те саме у попапі «Налаштування») */
+.vo-input, .vo-settings-input { width: 100%; padding: 14px 16px; border: 1px solid var(--border-input); border-radius: var(--radius-md); background: var(--bg-input); color: var(--text-main); font-family: inherit; font-size: 16px; transition: border-color var(--transition-normal), background-color var(--transition-normal); }
+.vo-input:focus, .vo-settings-input:focus { border-color: var(--accent); background: var(--bg-input-hover); }
+.vo-input::placeholder, .vo-settings-input::placeholder { color: var(--text-hint); }
+/* Попап з кнопкою закриття: заголовок на одному рівні з кнопкою (36px) */
+.vo-modal-content--closable { padding-top: 16px; }
+.vo-modal-content--closable h3 { line-height: 36px; margin-bottom: 16px; padding-right: 44px; }
+
+.vo-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 18px; border-radius: var(--radius-md); font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all var(--transition-fast); }
+.vo-btn-primary { background: var(--accent); color: var(--text-on-accent); }
+.vo-btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-accent); }
+.vo-btn-secondary { background: var(--bg-input); color: var(--text-main); border-color: var(--border-input); }
+.vo-btn-secondary:hover { background: var(--bg-input-hover); }
+.vo-btn-block { width: 100%; }
+
+.vo-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.vo-dialog-overlay.active { display: flex; animation: voDialogFade 0.2s ease; }
+.vo-dialog { background: var(--bg-card); border: 1px solid var(--border-input); border-radius: var(--radius-lg); width: 100%; max-width: 400px; padding: 30px 26px 24px; text-align: center; box-shadow: var(--shadow-modal); color: var(--text-secondary); animation: voDialogPop 0.2s ease; }
+.vo-dialog-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-transparent); color: var(--accent); font-size: 24px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+.vo-dialog-title { font-family: var(--font-heading); font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0 0 10px; }
+.vo-dialog-message { font-size: 14px; line-height: 1.55; color: var(--text-secondary); margin: 0 0 24px; white-space: pre-line; }
+.vo-dialog-actions { display: flex; gap: 10px; }
+@keyframes voDialogFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes voDialogPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* Картка без табів над нею: усі кути заокруглені */
+.vo-widget-wrapper--solo { border-radius: var(--radius-xl); }
+
+/* ---------- 6. НАЛАШТУВАННЯ І ПІДПИС ---------- */
+#voSettingsModal { z-index: 1200; }
+.vo-settings-content { max-width: 520px; padding: 16px 28px 28px; }
+.vo-settings-content h3 { line-height: 36px; margin-bottom: 16px; padding-right: 44px; } /* на одному рівні з кнопкою закриття (36px) */
+.vo-settings-field { margin-bottom: 24px; }
+.vo-settings-name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vo-sign-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.vo-sign-head .vo-label { margin-bottom: 0; }
+.vo-sign-tools { display: flex; gap: 6px; }
+.vo-sign-tool { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border-input); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+.vo-sign-tool:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.vo-sign-tool:disabled { opacity: 0.35; cursor: default; }
+.vo-sign-pad-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #fafafa; border: 1px solid var(--border-input); border-radius: var(--radius-md); overflow: hidden; }
+.vo-settings-sign-pad { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; z-index: 2; }
+.vo-sign-baseline { position: absolute; left: 8%; right: 8%; bottom: 26%; border-bottom: 1px dashed #cfcfcf; pointer-events: none; z-index: 1; }
+.vo-sign-placeholder { position: absolute; left: 0; right: 0; bottom: 9%; text-align: center; font-size: 12px; color: #aaa; pointer-events: none; z-index: 1; transition: opacity var(--transition-fast); }
+.vo-sign-pad-wrap.has-ink .vo-sign-placeholder { opacity: 0; }
+
+
+/* ---------- 7. АДАПТИВ ---------- */
+@media (min-width: 480px) {
+    .vo-status-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+}
+@media (min-width: 1025px) {
+    .container { padding-left: 80px; }
+    .vo-sidebar:hover ~ .container { padding-left: 260px; }
+    .vo-menu-btn { display: none; }
+    .vo-modal-overlay { padding-left: 60px; }
+}
+@media (min-width: 1201px) {
+    .vo-desktop-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+    .vo-grid-left { display: flex; justify-content: flex-start; }
+    .vo-grid-right { display: flex; justify-content: flex-end; }
+    .vo-grid-center { width: 33vw; min-width: 700px; }
+    .vo-checkbox-group-grid { grid-template-columns: repeat(3, 1fr); }
+    .mobile-only { display: none !important; }
+}
+@media (max-width: 1200px) {
+    .desktop-only { display: none !important; }
+    .vo-main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5%; }
+    .vo-header-actions { display: flex; gap: 15px; }
+    .vo-grid-center { width: 100%; max-width: 800px; margin: 0 auto; }
+}
+@media (max-width: 1024px) {
+    .vo-sidebar { display: none; }
+    .vo-how-it-works-btn { padding: 5px; border: none; }
+    .vo-how-it-works-btn span { display: none; }
+    .vo-how-it-works-btn i { font-size: 24px; }
+    .vo-menu-btn { background: none; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; padding: 5px; display: block; }
+    .container { padding: 0 0 80px 0; }
+    .vo-main-header { position: fixed; top: 0; left: 0; width: 100%; height: 70px; z-index: 90; background-color: var(--bg-overscroll); margin: 0; transition: background-color var(--transition-normal); }
+    .vo-tabs-container { margin-top: 75px; gap: 3px; padding: 0 5%; }
+    .vo-tab { padding: 15px 5px; font-size: 14px; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .vo-widget-wrapper { width: 90%; margin: 0 auto; padding: 25px 5% 40px; }
+    .vo-main-header ~ .vo-widget-wrapper--solo { margin-top: 75px; } /* відступ під фіксовану шапку, якщо табів немає */
+    .vo-status-grid.vo-service-grid { display: flex; flex-direction: column; }
+    .vo-textarea { resize: none; }
+    .vo-action-buttons { padding-left: 10px; gap: 5px; }
+    .vo-icon-btn { width: 38px; height: 38px; font-size: 16px; }
+}
+@media (max-width: 600px) {
+    .vo-tabs-container { padding: 0; }
+    .vo-widget-wrapper { width: 100%; padding: 25px 5%; }
+    .vo-legal-block { flex-direction: column; gap: 10px; }
+    .vo-rights-section, .vo-ai-section { flex: none; width: 100%; }
+    .vo-ai-section { border-left: none; border-top: 1px solid var(--border-input); padding-left: 0; padding-top: 15px; }
+    .vo-result-card { flex-wrap: nowrap; padding: 16px; gap: 10px; }
+    .vo-result-value { font-size: clamp(18px, 6.2vw, 26px); white-space: nowrap; }
+    .vo-action-buttons { flex-shrink: 0; }
+    .vo-icon-btn { width: 36px; height: 36px; font-size: 15px; }
+    .vo-settings-content { padding: 16px 20px 22px; }
+}
