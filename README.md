@@ -14,8 +14,8 @@
 У CSS-блоці сторінки (перед `<style>` сторінки):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1.0.0/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1.0.0/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@<ВЕРСІЯ>/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@<ВЕРСІЯ>/univoice-ui.js"></script>
 ```
 
 На початку HTML-блоку сторінки — місце для меню:
@@ -31,13 +31,15 @@ const { on, onAll, show, escapeHtml, formatDate, lsGet, lsSet, LS_KEYS, getDicto
 Univoice.onSettingsSaved(() => { /* напр. оновити підпис у рахунку */ });
 ```
 
+`<ВЕРСІЯ>` — код коміту (40 символів), у якому лежить потрібна версія файлів. Актуальні рядки підключення — у файлі [VERSIONS.md](VERSIONS.md).
+
 ## Як оновлювати
 
 1. Змінити файли й зробити коміт.
-2. Поставити новий тег версії (`1.0.1`, `1.1.0` …).
-3. На сторінках у Tilda замінити номер після `@` на новий.
+2. Дописати в `VERSIONS.md` новий рядок: номер версії, код коміту, що змінилося.
+3. На сторінках у Tilda замінити код після `@` на новий.
 
-Старі версії лишаються доступними, тож будь-яку сторінку можна повернути на попередній номер.
+Кожна версія за своїм кодом доступна назавжди і ніколи не змінюється, тож будь-яку сторінку можна повернути на попередній код.
 
 ## Пункти меню
 
