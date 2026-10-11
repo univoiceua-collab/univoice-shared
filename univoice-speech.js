@@ -33,18 +33,18 @@
     /* =================================================================
        1. НАЛАШТУВАННЯ ТЕМПУ І ПАУЗ
        Час слова = (голосні × VOWEL + приголосні × CONSONANT) × PACE.
-       PACE підібрано так, щоб звичайний текст без чисел у середньому
-       звучав так само, як у попередній версії калькулятора.
+       PACE і паузи підібрано так, щоб звичайний текст без чисел звучав
+       на 3–4 % швидше, ніж у старій формулі калькулятора (версія 1.3.0).
        ================================================================= */
     const CONFIG = {
-        PACE: 1,                // загальний множник темпу (1 — звичайний)
+        PACE: 0.98,             // загальний множник темпу (менше — швидше)
         VOWEL: 0.117,           // сек на голосний звук (склад)
         CONSONANT: 0.059,       // сек на приголосний звук
         PAUSE: {
             comma: 0.3,         // , ; : – —
             bracket: 0.15,      // ( )
-            sentence: 0.5,      // . ! ? …
-            paragraph: 0.25,    // додатково на новий рядок / абзац
+            sentence: 0.45,     // . ! ? …
+            paragraph: 0.25,    // додатково на порожній рядок між абзацами
         },
     };
 
@@ -332,6 +332,7 @@
     // Слова, яких тут немає, читаються за правилами англійської вимови і позначаються «перевірте читання».
     // ✎ Додати слово: "слово:читання" через | (наприклад |nescafe:нескафе)
     const FOREIGN_WORDS = Object.fromEntries((
+        'under:андер|armour:армор|versace:версаче|balenciaga:баленсіага|burberry:барберрі|' +
         // техніка, сервіси, банки
         'apple:епл|iphone:айфон|ipad:айпед|imac:аймак|macbook:макбук|mac:мак|airpods:ейрподс|airtag:ейртег|watch:вотч|samsung:самсунг|galaxy:гелексі|' +
         'xiaomi:сяомі|redmi:редмі|poco:поко|huawei:хуавей|honor:хонор|oppo:оппо|realme:ріалмі|nokia:нокіа|motorola:моторола|sony:соні|playstation:плейстейшн|' +
@@ -446,6 +447,74 @@
         R(/([бвгґджзклмнпрстфхцчшщ])\1/g, '$1');
         R(/([бпвмфр])([юяєї])/g, "$1'$2");
         return w;
+    }
+
+    // Англійські слова «як звучать» — за словником вимови univoice-en.js (якщо він підключений):
+    // under → «андер», armour → «армор», think → «сінк». Кожен звук записаний однією літерою
+    const EN_VOWELS = 'AA AE AH AO AW AY EH ER EY IH IY OW OY UH UW'.split(' ');
+    const EN_CONSONANTS = 'B CH D DH F G HH JH K L M N NG P R S SH T TH V W Y Z ZH'.split(' ');
+    const EN_CODES = { stressed: 'ABCDEFGHIJKLMNO', unstressed: 'abcdefghijklmno', consonants: 'PQRSTUVWXYZpqrstuvwxyz01' };
+    // Як звучить кожен звук українськими літерами
+    const EN_SOUND = {
+        AA: 'а', AE: 'е', AH: 'а', AO: 'о', AW: 'ау', AY: 'ай', EH: 'е', ER: 'ер', EY: 'ей', IH: 'і', IY: 'і', OW: 'оу', OY: 'ой', UH: 'у', UW: 'у',
+        B: 'б', CH: 'ч', D: 'д', DH: 'з', F: 'ф', G: 'г', HH: 'х', JH: 'дж', K: 'к', L: 'л', M: 'м', N: 'н', NG: 'нг', P: 'п', R: 'р', S: 'с', SH: 'ш', T: 'т', TH: 'с', V: 'в', W: 'в', Y: 'й', Z: 'з', ZH: 'ж',
+    };
+    // Й + голосний → одна літера: music → «м'юзік», yes → «єс»
+    const EN_IOTA = { UW: 'ю', UH: 'ю', AA: 'я', AH: 'я', AE: 'я', EH: 'є', IY: 'ї', IH: 'ї', ER: 'єр' };
+    let englishMap = null;
+    function englishPhones(word) {
+        if (!englishMap) {
+            const src = root.UnivoiceEnglish || (typeof module !== 'undefined' ? englishData : null);
+            if (!src || !src.data) return null;
+            englishMap = new Map(src.data.split('|').map(e => e.split(' ')));
+        }
+        const code = englishMap.get(word.toLowerCase());
+        if (!code) return null;
+        return [...code].map(ch => {
+            let i = EN_CODES.stressed.indexOf(ch);
+            if (i >= 0) return { ph: EN_VOWELS[i], vowel: true, stressed: true };
+            i = EN_CODES.unstressed.indexOf(ch);
+            if (i >= 0) return { ph: EN_VOWELS[i], vowel: true, stressed: false };
+            return { ph: EN_CONSONANTS[EN_CODES.consonants.indexOf(ch)], vowel: false };
+        });
+    }
+    let englishData = null; // для перевірок у node: UnivoiceSpeech.setEnglish(require('./univoice-en.js'))
+    function setEnglish(data) { englishData = data; englishMap = null; }
+
+    function englishReading(word) {
+        const phones = englishPhones(word);
+        if (!phones) return null;
+        // Ненаголошені голосні звучать нечітко, тому їх пишемо за написанням: armour → «армор», dollar → «долар»
+        const w = word.toLowerCase();
+        const spelled = (w.replace(/(?<=[^aeiouy])e$/, '').replace(/^y(?=[aeiou])/, '').match(/[aeiouy]+/g) || []);
+        const vowelPhones = phones.filter(p => p.vowel);
+        const aligned = spelled.length === vowelPhones.length;
+        let out = '', v = 0;
+        phones.forEach((p, i) => {
+            const next = phones[i + 1];
+            if (p.vowel) {
+                const g = aligned ? spelled[v] : '';
+                v++;
+                const prev = phones[i - 1];
+                let r;
+                if (!p.stressed && p.ph === 'AH' && next && next.ph === 'L' && i === phones.length - 2 && /le$/.test(w)) r = ''; // apple → «епл»
+                else if (!p.stressed && p.ph === 'AH' && prev && /^(?:SH|ZH|CH)$/.test(prev.ph) && next && next.ph === 'N' && i === phones.length - 2) r = ''; // motion → «моушн»
+                else if (!p.stressed && (p.ph === 'AH' || p.ph === 'ER')) {
+                    const base = /^(?:o|ou|oa)$/.test(g) ? 'о' : /^a/.test(g) ? 'а' : /^[iy]/.test(g) ? 'і' : /^u/.test(g) ? 'а' : 'е';
+                    r = p.ph === 'ER' ? (base === 'і' || base === 'а' && !/^a/.test(g) ? 'е' : base) + 'р' : base;
+                }
+                else if (p.ph === 'OW' && (!p.stressed || (i === phones.length - 1 && vowelPhones.length > 1))) r = 'о'; // radio → «радіо»
+                else if (p.ph === 'AA' && /^o/.test(g)) r = 'о'; // doctor → «доктор», shop → «шоп»
+                else r = EN_SOUND[p.ph];
+                if (prev && prev.ph === 'Y' && EN_IOTA[p.ph]) {
+                    out = out.slice(0, -1);
+                    r = EN_IOTA[p.ph] + r.slice(1);
+                }
+                out += r;
+            } else if (p.ph === 'NG' && next && (next.ph === 'K' || next.ph === 'G')) out += 'н';
+            else out += EN_SOUND[p.ph];
+        });
+        return out.replace(/^й(?=[аеіоу])/, (m) => m).replace(/([бпвмфр])([юяєї])/g, "$1'$2").replace(/йі/g, 'ї');
     }
 
     /* =================================================================
@@ -889,6 +958,8 @@
         const key = w.toLowerCase();
         if (FOREIGN_WORDS[key]) return { r: FOREIGN_WORDS[key], guess: false };
         if (spell) return { r: spellAcronym(w), guess: false };
+        const en = englishReading(w);
+        if (en) return { r: en, guess: false };
         if (/-/.test(w)) { // Wi-Fi-роутер, e-commerce
             const parts = w.split('-').map(p => (/[A-Za-z]/.test(p) ? readLatin(p, p.length > 1 && p === p.toUpperCase() && !readsAsWord(p)) : { r: p, guess: false }));
             return { r: parts.map(p => p.r).join('-'), guess: parts.some(p => p.guess) };
@@ -1124,12 +1195,14 @@
         add((body.match(/[.!?…]+/g) || []).length, P.sentence);
         add((body.match(/[,;:]|\s[-–—]\s/g) || []).length, P.comma);
         add((body.match(/[()]/g) || []).length, P.bracket);
-        const lines = body.split(/\n+/);
-        for (let i = 0; i < lines.length - 1; i++) {
-            if (/[.!?…]["»”]?\s*$/.test(lines[i])) add(1, P.paragraph);
-            else if (/[,;:]\s*$/.test(lines[i])) add(1, P.paragraph);
-            else add(1, P.sentence); // рядок без розділового знака — як кінець речення
-        }
+        // Новий рядок після знака не додає паузи (вона вже є), порожній рядок між абзацами — додає;
+        // рядок без розділового знака в кінці — як кінець речення
+        body.split(/(\n\s*)/).forEach((part, i, all) => {
+            if (i % 2 === 0 || i === all.length - 1) return;
+            const line = all[i - 1];
+            if (!/[.!?…,;:]["»”)]?\s*$/.test(line)) add(1, P.sentence);
+            if ((part.match(/\n/g) || []).length > 1) add(1, P.paragraph);
+        });
         return { count, seconds };
     }
 
@@ -1152,7 +1225,7 @@
         };
     }
 
-    const api = { version: '1.2.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, numberToWords, numberToWordsGen, ordinalWords, plural };
+    const api = { version: '1.3.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
