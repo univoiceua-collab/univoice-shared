@@ -106,28 +106,63 @@
         return out.join(' ');
     }
 
-    // Родовий відмінок: від 10 до 15 → "від десяти до п'ятнадцяти"
-    const ONES_GEN = ['нуля', 'одного', 'двох', 'трьох', 'чотирьох', "п'яти", 'шести', 'семи', 'восьми', "дев'яти"];
-    const ONES_GEN_F = ['нуля', 'однієї', 'двох', 'трьох', 'чотирьох', "п'яти", 'шести', 'семи', 'восьми', "дев'яти"];
+    // Непрямі відмінки: від 10 до 15 → "від десяти до п'ятнадцяти", з 3 трубами → "з трьома трубами"
+    // gen — родовий, dat — давальний, ins — орудний, loc — місцевий, acc — знахідний (як називний, але "одну", "тисячу")
     const TEENS_GEN = ['десяти', 'одинадцяти', 'дванадцяти', 'тринадцяти', 'чотирнадцяти', "п'ятнадцяти", 'шістнадцяти', 'сімнадцяти', 'вісімнадцяти', "дев'ятнадцяти"];
     const TENS_GEN = ['', '', 'двадцяти', 'тридцяти', 'сорока', "п'ятдесяти", 'шістдесяти', 'сімдесяти', 'вісімдесяти', "дев'яноста"];
-    const HUNDREDS_GEN = ['', 'ста', 'двохсот', 'трьохсот', 'чотирьохсот', "п'ятисот", 'шестисот', 'семисот', 'восьмисот', "дев'ятисот"];
+    const NUM_CASES = {
+        gen: {
+            ones: ['нуля', 'одного', 'двох', 'трьох', 'чотирьох', "п'яти", 'шести', 'семи', 'восьми', "дев'яти"], one: { f: 'однієї' },
+            teens: TEENS_GEN, tens: TENS_GEN,
+            hundreds: ['', 'ста', 'двохсот', 'трьохсот', 'чотирьохсот', "п'ятисот", 'шестисот', 'семисот', 'восьмисот', "дев'ятисот"],
+        },
+        dat: {
+            ones: ['нулю', 'одному', 'двом', 'трьом', 'чотирьом', "п'яти", 'шести', 'семи', 'восьми', "дев'яти"], one: { f: 'одній' },
+            teens: TEENS_GEN, tens: TENS_GEN,
+            hundreds: ['', 'ста', 'двомстам', 'трьомстам', 'чотирьомстам', "п'ятистам", 'шестистам', 'семистам', 'восьмистам', "дев'ятистам"],
+        },
+        ins: {
+            ones: ['нулем', 'одним', 'двома', 'трьома', 'чотирма', "п'ятьма", 'шістьма', 'сьома', 'вісьма', "дев'ятьма"], one: { f: 'однією' },
+            teens: TEENS_GEN.map(w => w.replace(/и$/, 'ьма')),
+            tens: ['', '', 'двадцятьма', 'тридцятьма', 'сорока', "п'ятдесятьма", 'шістдесятьма', 'сімдесятьма', 'вісімдесятьма', "дев'яноста"],
+            hundreds: ['', 'ста', 'двомастами', 'трьомастами', 'чотирмастами', "п'ятьмастами", 'шістьмастами', 'сьомастами', 'вісьмастами', "дев'ятьмастами"],
+        },
+        loc: {
+            ones: ['нулі', 'одному', 'двох', 'трьох', 'чотирьох', "п'яти", 'шести', 'семи', 'восьми', "дев'яти"], one: { f: 'одній' },
+            teens: TEENS_GEN, tens: TENS_GEN,
+            hundreds: ['', 'ста', 'двохстах', 'трьохстах', 'чотирьохстах', "п'ятистах", 'шестистах', 'семистах', 'восьмистах', "дев'ятистах"],
+        },
+    };
+    // Тисячі й мільйони в непрямих відмінках: [одна, кілька]
+    const SCALE_CASES = {
+        1e12: { acc: ['трильйон'], gen: ['трильйона', 'трильйонів'], dat: ['трильйону', 'трильйонам'], ins: ['трильйоном', 'трильйонами'], loc: ['трильйоні', 'трильйонах'] },
+        1e9:  { acc: ['мільярд'], gen: ['мільярда', 'мільярдів'], dat: ['мільярду', 'мільярдам'], ins: ['мільярдом', 'мільярдами'], loc: ['мільярді', 'мільярдах'] },
+        1e6:  { acc: ['мільйон'], gen: ['мільйона', 'мільйонів'], dat: ['мільйону', 'мільйонам'], ins: ['мільйоном', 'мільйонами'], loc: ['мільйоні', 'мільйонах'] },
+        1e3:  { acc: ['тисячу'], gen: ['тисячі', 'тисяч'], dat: ['тисячі', 'тисячам'], ins: ['тисячею', 'тисячами'], loc: ['тисячі', 'тисячах'] },
+    };
 
-    function triadGen(n, gender) {
-        const out = [];
+    function triadCase(n, gender, cs) {
+        if (cs === 'nom' || cs === 'acc') {
+            const out = triad(n, gender);
+            if (cs === 'acc' && gender === 'f' && out[out.length - 1] === 'одна') out[out.length - 1] = 'одну';
+            return out;
+        }
+        const T = NUM_CASES[cs], out = [];
         const h = Math.floor(n / 100), rest = n % 100;
-        if (h) out.push(HUNDREDS_GEN[h]);
-        if (rest >= 10 && rest < 20) out.push(TEENS_GEN[rest - 10]);
+        if (h) out.push(T.hundreds[h]);
+        if (rest >= 10 && rest < 20) out.push(T.teens[rest - 10]);
         else {
-            if (rest >= 20) out.push(TENS_GEN[Math.floor(rest / 10)]);
-            if (rest % 10) out.push((gender === 'f' ? ONES_GEN_F : ONES_GEN)[rest % 10]);
+            if (rest >= 20) out.push(T.tens[Math.floor(rest / 10)]);
+            if (rest % 10) out.push(rest % 10 === 1 && T.one[gender] || T.ones[rest % 10]);
         }
         return out;
     }
 
-    function numberToWordsGen(n, gender = 'm') {
+    // Число в потрібному відмінку: (3, 'f', 'ins') → "трьома", (1000, 'f', 'acc') → "тисячу"
+    function numberToWordsCase(n, gender = 'm', cs = 'nom') {
+        if (cs === 'nom' || !NUM_CASES[cs] && cs !== 'acc') return numberToWords(n, gender);
         n = Math.floor(Math.abs(n));
-        if (n === 0) return 'нуля';
+        if (n === 0) return cs === 'acc' ? 'нуль' : NUM_CASES[cs].ones[0];
         if (!Number.isSafeInteger(n) || n >= 1e15) return digitsToWords(String(n));
         const out = [];
         let rest = n;
@@ -135,11 +170,18 @@
             const k = Math.floor(rest / s.value);
             if (!k) return;
             rest %= s.value;
-            if (k === 1 && !out.length) out.push(s.gen[0]);
-            else out.push(...triadGen(k, s.gender), k % 10 === 1 && k % 100 !== 11 ? s.gen[0] : s.gen[1]);
+            const forms = SCALE_CASES[s.value][cs];
+            const one = k % 10 === 1 && k % 100 !== 11;
+            if (k === 1 && !out.length) out.push(forms[0]);
+            else if (cs === 'acc') out.push(...triadCase(k, s.gender, cs), one ? forms[0] : plural(k, s.forms));
+            else out.push(...triadCase(k, s.gender, cs), one ? forms[0] : forms[1]);
         });
-        if (rest) out.push(...triadGen(rest, gender));
+        if (rest) out.push(...triadCase(rest, gender, cs));
         return out.join(' ');
+    }
+
+    function numberToWordsGen(n, gender = 'm') {
+        return numberToWordsCase(n, gender, 'gen');
     }
 
     // Порядкові числа: 1 → перший / першого / перша …
@@ -159,7 +201,7 @@
     // Частина складного слова: 2000 → "двох|тисячний", 25000 → "двадцятип'яти|тисячний"
     function combining(k) {
         if (k === 1) return '';
-        return triadGen(k, 'm').join('').replace(/^одного$/, '');
+        return triadCase(k, 'm', 'gen').join('').replace(/^одного$/, '');
     }
 
     function ordinalWords(n, form = 'm.nom') {
@@ -266,7 +308,8 @@
         ['x|х|×', 'm', ['раз', 'рази', 'разів', 'раза']],
     ];
 
-    // Скорочення в тексті. true — скорочення може стояти в кінці речення ("і т.д."), тоді крапка лишається
+    // Скорочення в тексті. true — скорочення може стояти в кінці речення ("і т.д."), тоді крапка лишається.
+    // Масив — форми за відмінками [називний, родовий, давальний, місцевий, орудний, знахідний]: "в м. Київ" → "в місті Київ"
     const ABBREVIATIONS = [
         [/(^|[\s(])(?:і|та)\s?т\.\s?д\./g, '$1і так далі', true],
         [/(^|[\s(])т\.\s?д\./g, '$1так далі', true],
@@ -276,19 +319,21 @@
         [/(^|[\s(])напр\./g, '$1наприклад'],
         [/(^|[\s(])див\./g, '$1дивіться'],
         [/(^|[\s(])тел\./gi, '$1телефон'],
-        [/(^|[\s(])вул\./gi, '$1вулиця'],
-        [/(^|[\s(])(?:просп\.|пр-т)/gi, '$1проспект'],
-        [/(^|[\s(])пров\./gi, '$1провулок'],
-        [/(^|[\s(])(?:бульв\.|б-р)/gi, '$1бульвар'],
-        [/(^|[\s(])пл\.(?=\s?[А-ЯІЇЄҐ])/g, '$1площа'],
-        [/(^|[\s(])обл\./gi, '$1область', true],
-        [/(^|[\s(])р-н/gi, '$1район', true],
-        [/(^|[\s(])буд\./gi, '$1будинок'],
-        [/(^|[\s(])кв\./gi, '$1квартира'],
-        [/(^|[\s(])оф\./gi, '$1офіс'],
-        [/(^|[\s(])м\.(?=\s?[А-ЯІЇЄҐ])/g, '$1місто'],
-        [/(^|[\s(])с\.(?=\s?[А-ЯІЇЄҐ])/g, '$1село'],
-        [/(^|[\s(])смт(?=[\s.,]|$)/g, '$1селище міського типу'],
+        [/(^|[\s(])вул\./gi, ['вулиця', 'вулиці', 'вулиці', 'вулиці', 'вулицею', 'вулицю']],
+        [/(^|[\s(])(?:просп\.|пр-т)(?![\p{L}])/giu, ['проспект', 'проспекту', 'проспекту', 'проспекті', 'проспектом', 'проспект']],
+        [/(^|[\s(])пров\./gi, ['провулок', 'провулку', 'провулку', 'провулку', 'провулком', 'провулок']],
+        [/(^|[\s(])(?:бульв\.|б-р)(?![\p{L}])/giu, ['бульвар', 'бульвару', 'бульвару', 'бульварі', 'бульваром', 'бульвар']],
+        [/(^|[\s(])пл\.(?=\s?[А-ЯІЇЄҐ])/g, ['площа', 'площі', 'площі', 'площі', 'площею', 'площу']],
+        [/(^|[\s(])обл\./gi, ['область', 'області', 'області', 'області', 'областю', 'область'], true],
+        [/(^|[\s(])р-н(?=[а-яіїєґ])/gi, '$1район'],
+        [/(^|[\s(])р-н/gi, ['район', 'району', 'району', 'районі', 'районом', 'район'], true],
+        [/(^|[\s(])буд\./gi, ['будинок', 'будинку', 'будинку', 'будинку', 'будинком', 'будинок']],
+        [/(^|[\s(])кв\./gi, ['квартира', 'квартири', 'квартирі', 'квартирі', 'квартирою', 'квартиру']],
+        [/(^|[\s(])оф\./gi, ['офіс', 'офісу', 'офісу', 'офісі', 'офісом', 'офіс']],
+        [/(^|[\s(])ст\.\s?м\./g, ['станція метро', 'станції метро', 'станції метро', 'станції метро', 'станцією метро', 'станцію метро']],
+        [/(^|[\s(])м\.(?=\s?[А-ЯІЇЄҐ])/g, ['місто', 'міста', 'місту', 'місті', 'містом', 'місто']],
+        [/(^|[\s(])с\.(?=\s?[А-ЯІЇЄҐ])/g, ['село', 'села', 'селу', 'селі', 'селом', 'село']],
+        [/(^|[\s(])смт(?=[\s.,]|$)/g, ['селище міського типу', 'селища міського типу', 'селищу міського типу', 'селищі міського типу', 'селищем міського типу', 'селище міського типу']],
         [/(^|[\s(])ім\./g, '$1імені'],
         [/(^|[\s(])проф\./g, '$1професор'],
         [/(^|[\s(])доц\./g, '$1доцент'],
@@ -302,10 +347,9 @@
         [/(^|[\s(])P\.\s?S\.?/gi, '$1пі ес'],
         [/(^|[\s(])т\.\s?зв\./g, '$1так званий'],
         [/(^|[\s(])н\.\s?е\./g, '$1нашої ери', true],
-        [/(^|[\s(])ст\.\s?м\./g, '$1станція метро'],
-        [/(^|[\s(])ст\.(?=\s?метро)/g, '$1станція'],
-        [/(^|[\s(])корп\./gi, '$1корпус'],
-        [/(^|[\s(])мкрн?\./gi, '$1мікрорайон'],
+                [/(^|[\s(])ст\.(?=\s?метро)/g, ['станція', 'станції', 'станції', 'станції', 'станцією', 'станцію']],
+        [/(^|[\s(])корп\./gi, ['корпус', 'корпусу', 'корпусу', 'корпусі', 'корпусом', 'корпус']],
+        [/(^|[\s(])мкрн?\./gi, ['мікрорайон', 'мікрорайону', 'мікрорайону', 'мікрорайоні', 'мікрорайоном', 'мікрорайон']],
         [/(^|[\s(])моб\./gi, '$1мобільний'],
         [/(^|[\s(])с\.(?=\s?\d)/g, '$1сторінка'],
         [/(^|[\s(])п\.(?=\s?\d)/g, '$1пункт'],
@@ -315,7 +359,7 @@
         [/(^|[\s(])д-р(?=[\s.,]|$)/g, '$1доктор'],
         [/(^|[\s(])акад\./g, '$1академік'],
         [/(^|[\s(])вид-во/g, '$1видавництво'],
-        [/(^|[\s(])с-ще/g, '$1селище'],
+        [/(^|[\s(])с-ще(?![\p{L}])/gu, ['селище', 'селища', 'селищу', 'селищі', 'селищем', 'селище']],
         [/(^|[\s(])шт\.(?=[\s.,;:!?)]|$)/g, '$1штук', true],
     ];
 
@@ -332,7 +376,7 @@
     // Слова, яких тут немає, читаються за правилами англійської вимови і позначаються «перевірте читання».
     // ✎ Додати слово: "слово:читання" через | (наприклад |nescafe:нескафе)
     const FOREIGN_WORDS = Object.fromEntries((
-        'under:андер|armour:армор|versace:версаче|balenciaga:баленсіага|burberry:барберрі|' +
+        'under:андер|armour:армор|charles:чарльз|michael:майкл|jones:джонс|versace:версаче|balenciaga:баленсіага|burberry:барберрі|' +
         // техніка, сервіси, банки
         'apple:епл|iphone:айфон|ipad:айпед|imac:аймак|macbook:макбук|mac:мак|airpods:ейрподс|airtag:ейртег|watch:вотч|samsung:самсунг|galaxy:гелексі|' +
         'xiaomi:сяомі|redmi:редмі|poco:поко|huawei:хуавей|honor:хонор|oppo:оппо|realme:ріалмі|nokia:нокіа|motorola:моторола|sony:соні|playstation:плейстейшн|' +
@@ -508,10 +552,12 @@
                 else r = EN_SOUND[p.ph];
                 if (prev && prev.ph === 'Y' && EN_IOTA[p.ph]) {
                     out = out.slice(0, -1);
+                    if (/[лн]$/.test(out)) out += 'ь'; // Williams → «Вільямс»
                     r = EN_IOTA[p.ph] + r.slice(1);
                 }
                 out += r;
             } else if (p.ph === 'NG' && next && (next.ph === 'K' || next.ph === 'G')) out += 'н';
+            else if (p.ph === 'Z' && !next && /s$/.test(w) && /^(?:M|N|R|ER)$/.test(phones[i - 1]?.ph)) out += 'с'; // James → «Джеймс», Rogers → «Роджерс»
             else out += EN_SOUND[p.ph];
         });
         return out.replace(/^й(?=[аеіоу])/, (m) => m).replace(/([бпвмфр])([юяєї])/g, "$1'$2").replace(/йі/g, 'ї');
@@ -533,13 +579,13 @@
     const UNIT_RE = UNITS.map(u => u[0]).join('|');
     const PERCENT_FORMS = ['відсоток', 'відсотки', 'відсотків', 'відсотка'];
 
-    function moneyWords(intStr, fracStr, code, gen) {
+    function moneyWords(intStr, fracStr, code, cs) {
         const c = CURRENCIES[code];
         const int = +cleanNum(intStr);
-        let out = countWords(int, c.gender, c.forms, gen);
+        let out = countWords(int, c.gender, c.forms, cs);
         if (fracStr && +fracStr) {
             const minor = +(fracStr + '0').slice(0, 2);
-            out += ` ${countWords(minor, c.minor.gender, c.minor.forms, gen)}`;
+            out += ` ${countWords(minor, c.minor.gender, c.minor.forms, cs)}`;
         }
         return out;
     }
@@ -592,11 +638,133 @@
         return 'm';
     }
 
-    // Число з іменником у потрібному відмінку: (5, одиниця) → "п'ять кілометрів" або "п'яти кілометрів"
-    function countWords(n, gender, forms, gen) {
-        if (!gen) return `${numberToWords(n, gender)} ${plural(n, forms)}`;
+    // Число з іменником у потрібному відмінку: (5, одиниця) → "п'ять кілометрів", "п'яти кілометрів", "п'ятьма кілометрами"
+    // cs — відмінок ('nom', 'acc', 'gen', 'dat', 'ins', 'loc'); true — родовий, false — називний
+    function countWords(n, gender, forms, cs) {
+        cs = cs === true ? 'gen' : cs || 'nom';
+        return `${numberToWordsCase(n, gender, cs)} ${nounCase(forms, n, cs)}`;
+    }
+
+    // Іменник після числа: forms = [1, 2–4, 5+, родовий однини].
+    // кілометр → кілометрам / кілометрами / кілометрах, гривня → гривню / гривні / гривнею, квадратний метр → квадратним метрам
+    const NOUN_PL = { hard: { dat: 'ам', ins: 'ами', loc: 'ах' }, soft: { dat: 'ям', ins: 'ями', loc: 'ях' } };
+    function nounCase(forms, n, cs) {
         const one = n % 10 === 1 && n % 100 !== 11;
-        return `${numberToWordsGen(n, gender)} ${one ? forms[3] || forms[0] : forms[2]}`;
+        if (cs === 'gen') return one ? forms[3] || forms[0] : forms[2];
+        const word = plural(n, forms);
+        if (cs === 'acc') return one ? word.replace(/^(\S+?)а(?=\s|$)/, '$1у').replace(/^(\S+?)я(?=\s|$)/, '$1ю') : word;
+        if (cs !== 'dat' && cs !== 'ins' && cs !== 'loc') return word;
+        if (forms[0] === forms[2]) return forms[0]; // євро
+        const sg = forms[0].split(' '), gen = (forms[3] || '').split(' '), words = (one ? forms[0] : forms[1]).split(' ');
+        for (let i = 0; i < words.length; i++) {
+            if (/ий$/.test(sg[i] || '')) { // прикметник: квадратний, злотий
+                const stem = sg[i].slice(0, -2);
+                words[i] = stem + (one ? { dat: 'ому', ins: 'им', loc: 'ому' } : { dat: 'им', ins: 'ими', loc: 'их' })[cs];
+                continue;
+            }
+            const w = words[i];
+            if (!one) {
+                const stem = w.slice(0, -1);
+                words[i] = stem + NOUN_PL[/и$/.test(w) || /[жчшщ]$/.test(stem) ? 'hard' : 'soft'][cs];
+            } else if (/[ая]$/.test(w)) { // година → годині, годиною; гривня → гривні, гривнею
+                const stem = w.slice(0, -1), soft = /я$/.test(w) || /[жчшщ]$/.test(stem);
+                words[i] = cs === 'ins' ? stem + (soft ? 'ею' : 'ою') : (soft ? stem : stem.replace(/к$/, 'ц').replace(/г$/, 'з').replace(/х$/, 'с')) + 'і';
+            } else if (w === 'рік') {
+                words[i] = { dat: 'року', ins: 'роком', loc: 'році' }[cs];
+            } else { // кілометр → кілометру, кілометром, кілометрі; день → дню, днем, дні
+                const g = gen[i] || w, stem = /[ауя]$/.test(g) ? g.slice(0, -1) : g, soft = /я$/.test(g);
+                words[i] = stem + (cs === 'dat' ? (soft ? 'ю' : 'у') : cs === 'ins' ? (soft ? 'ем' : 'ом') : (!soft && /[кгх]$/.test(stem) ? 'у' : 'і'));
+            }
+            break;
+        }
+        return words.join(' ');
+    }
+
+    // Відмінок числа за словами навколо. Прийменник перед числом: "з 5" → родовий, "на 1" → знахідний.
+    // Закінчення слова після числа сильніше за прийменник: "з 3 трубами" → орудний, "у 5 містах" → місцевий
+    const ACC_PREPS = new Set(['на', 'за', 'через', 'про', 'понад', 'в', 'у', 'під', 'крізь']);
+    const INS_PREPS = new Set(['між', 'перед', 'над', 'поміж', 'поза']);
+    const DAT_PREPS = new Set(['к', 'завдяки', 'всупереч', 'назустріч']);
+    const LOC_PREPS = new Set(['в', 'у', 'на', 'при', 'по']);
+    // Слова на -ам/-ом/-ою, що не є давальним чи орудним: "5 програм", "1 разом"
+    const NOT_DAT = /^(?:сам|там|нам|вам|храм|\p{L}*(?:грам|програм|реклам|панорам|драм|гам|мам|дам|схем))$/u;
+    const NOT_INS = /^(?:разом|потім|собою|тобою|мною|нею|ними|втім|притім|часом|ранком|ладом|додому)$/;
+    // Займенник + дієслово перед числом: "Вона купила 1000 книг" → "тисячу"; "Купіть 1 книгу" → "одну"
+    const SUBJECTS = new Set(['я', 'ти', 'він', 'вона', 'воно', 'ми', 'ви', 'вони']);
+    function wordsBefore(str, offset, k) {
+        const clause = str.slice(Math.max(0, offset - 60), offset).split(/[.!?;:\n]/).pop();
+        return (clause.match(/[\p{L}']+/gu) || []).slice(-k).map(w => w.toLowerCase());
+    }
+    function isObject(str, offset) {
+        const [w1, w2] = wordsBefore(str, offset, 2).reverse();
+        if (!w1) return false;
+        if (/^(?:кошту\p{L}*)$/u.test(w1) || /(?:іть|йте|емо|ємо|имо|їмо)$/.test(w1)) return true;
+        return /\p{L}{2,}(?:ла|ли|ло|ав|ив|ів)$/u.test(w1) && !/^(?:бул[аио]|стал[аио]|був|став)$/.test(w1) && SUBJECTS.has(w2);
+    }
+    // Наступні слова до кінця фрази без абревіатур, латиниці й інших чисел: "3 ДВП трубами" → ["трубами"],
+    // "2 або 3 кімнатами" → ["кімнатами"]
+    function nextWords(str, end, k) {
+        const phrase = str.slice(end, end + 60).split(/[.,;:!?()\n«»"]/)[0]
+            .replace(/^\s+(?:і|й|та|або|чи)\s+\d[\d ]*(?=\s|$)/, '');
+        return phrase.split(/\s+/).filter(w => w && !/[A-Za-z\d]/.test(w) && w !== w.toUpperCase()).slice(0, k).map(w => w.toLowerCase());
+    }
+    function numberCase(str, off, end, n, unit) {
+        const prep = wordBefore(str, off);
+        const one = n % 10 === 1 && n % 100 !== 11;
+        let g = null;
+        if (!unit) {
+            const words = nextWords(str, end, 3);
+            for (const w of words) {
+                if (w.length < 3) break;
+                if (one) {
+                    if (/(?:ом|ем|єм|ою|ею|єю)$/.test(w) && !NOT_INS.test(w)) return { cs: 'ins', g: g || (/[ою]$/.test(w) ? 'f' : null) };
+                    if (/і$/.test(w) && /^(?:в|у|на|при)$/.test(prep)) return { cs: 'loc', g };
+                    if (/(?:ій|ої|ою)$/.test(w)) { g = 'f'; continue; }
+                    if (/(?:им|ім|ому|ого)$/.test(w)) continue;
+                    if (/(?:[^еоу]у|[^е]ю)$/.test(w) && !GEN_PREPS.has(prep) && !DAT_PREPS.has(prep) && prep !== 'по') return { cs: 'acc', g: 'f' }; // 1 книгу → "одну"
+                } else {
+                    if (/(?:ами|ями|ими|іми|ьми)$/.test(w) && !NOT_INS.test(w)) return { cs: 'ins', g };
+                    if (/(?:ах|ях)$/.test(w) && LOC_PREPS.has(prep)) return { cs: 'loc', g };
+                    if (/(?:ам|ям)$/.test(w) && !NOT_DAT.test(w)) return { cs: 'dat', g };
+                    if (/(?:их|іх|им|ім)$/.test(w)) continue;
+                }
+                break;
+            }
+        } else if (/^[ув]$/.test(prep) && /^\s+від\s/.test(str.slice(end, end + 6))) return { cs: 'loc', g }; // в 50 км від Києва
+        if (/^(?:і|й|та|або|чи)$/.test(prep)) { // між 2 і 3 км → "між двома і трьома кілометрами": як у попереднього числа
+            const before = str.slice(Math.max(0, off - 40), off);
+            const prev = before.match(/(\d[\d ]*(?:[.,]\d+)?)\s?(?:[^\s\d]{1,6}\s?){0,2}\s(?:і|й|та|або|чи)\s+$/u);
+            if (prev) {
+                const at = off - before.length + prev.index;
+                return { cs: numberCase(str, at, at + prev[1].length, n, unit).cs, g };
+            }
+        }
+        if (/^(?:з|із|зі)$/.test(prep) && /^(?:згідно|разом|поруч|порівняно|нарівні|одночасно|поряд|слідом)$/.test(wordsBefore(str, off, 2)[0] || '')) return { cs: 'ins', g };
+        if (GEN_PREPS.has(prep)) return { cs: 'gen', g };
+        if (INS_PREPS.has(prep)) return { cs: 'ins', g };
+        if (DAT_PREPS.has(prep)) return { cs: 'dat', g };
+        if (ACC_PREPS.has(prep) || isObject(str, off)) return { cs: 'acc', g };
+        return { cs: 'nom', g };
+    }
+
+    // Відмінок скорочення за прийменником чи прикметником перед ним: "в м. Київ" → "в місті", "по вул." → "по вулиці",
+    // "з м. Харків" → "з міста", "у Київській обл." → "області"; після дієслів руху — знахідний: "переїхали в м. Львів" → "в місто"
+    const PLACE_GEN = new Set(['біля', 'поблизу', 'навпроти', 'вздовж', 'уздовж', 'коло', 'посеред', 'неподалік', 'поруч']);
+    const MOTION = /^(?:їд|їха|поверт|поверн|прямуй|прямуват|рушай|спіши|поспіша|переїж|переїха|приїж|приїха|заїж|заїха|під'їж|йди|ідіть|ходи|заход|завіта|приход|прийд|поїд|поїха|вируша|прилет|відправ|достав|вез|привез|перевез|переход|доїха|доїж|потрап|в'їж|в'їха|запрошу|переносимо|переїзд|переходь)/;
+    const ADJ_CASE = /(?:ськ|цьк|зьк|ов|ев|єв|ин|їн|н|ч|л)(ій|ому|ої|ого|ою|им)$/;
+    const CASE_INDEX = { nom: 0, gen: 1, dat: 2, loc: 3, ins: 4, acc: 5 };
+    function placeCase(str, off) {
+        const prev = wordBefore(str, off);
+        if (GEN_PREPS.has(prev) || PLACE_GEN.has(prev)) return 'gen';
+        if (prev === 'по') return 'dat';
+        if (/^(?:за|під|над|перед|між|поза)$/.test(prev)) return 'ins';
+        if (/^(?:в|у|на|при|об)$/.test(prev)) {
+            const before = wordsBefore(str, off, 4).slice(0, -1);
+            return prev !== 'при' && before.some(w => MOTION.test(w)) ? 'acc' : 'loc';
+        }
+        const adj = prev.length > 4 && prev.match(ADJ_CASE);
+        if (adj) return { ій: 'loc', ому: 'loc', ої: 'gen', ого: 'gen', ою: 'ins', им: 'ins' }[adj[1]];
+        return 'nom';
     }
 
     // Скорочення з крапкою в кінці речення ("… 100 грн. Далі") — крапка лишається як кінець речення
@@ -814,7 +982,7 @@
             const prep = wordBefore(str, off);
             let out;
             if (GEN_PREPS.has(prep)) out = `${numberToWordsGen(x, gender)}-${countWords(y, gender, forms, true)}`;
-            else if (RANGE_PREPS.has(prep)) out = `${numberToWords(x, gender)}-${countWords(y, gender, forms, false)}`;
+            else if (RANGE_PREPS.has(prep)) out = `${numberToWordsCase(x, gender, ACC_PREPS.has(prep) ? 'acc' : 'nom')}-${countWords(y, gender, forms, ACC_PREPS.has(prep) ? 'acc' : 'nom')}`;
             else out = `від ${numberToWordsGen(x, gender)} до ${countWords(y, gender, forms, true)}`;
             return keepDot(m, off, str, out);
         });
@@ -822,24 +990,24 @@
         // Гроші: 1 499,99 грн, $100, 100$, 5 тис. грн, €3.50
         t = t.replace(new RegExp(`(${CURRENCY_RE})\\s?(${NUM})(?:[.,](\\d{1,2}))?(?![\\d]|[.,]\\d)(?!\\s?(?:${CURRENCY_RE})(?![${LETTER}]))`, 'gi'), (m, sign, int, frac, off, str) => {
             const code = currencyCode(sign);
-            return code && !/^[а-яіїєґ]/i.test(sign) ? (off && /\S/.test(str[off - 1]) ? ' ' : '') + moneyWords(int, frac, code, isGen(str, off)) : m;
+            return code && !/^[а-яіїєґ]/i.test(sign) ? (off && /\S/.test(str[off - 1]) ? ' ' : '') + moneyWords(int, frac, code, numberCase(str, off, off + m.length, +cleanNum(int), true).cs) : m;
         });
         t = t.replace(new RegExp(`(?<![\\d.,])(${NUM})(?:[.,](\\d{1,2}))?\\s?(тис\\.?|млн\\.?|млрд\\.?)?\\s?(${CURRENCY_RE})(?![${LETTER}])`, 'gi'), (m, int, frac, scale, sign, off, str) => {
             const code = currencyCode(sign);
             if (!code) return m;
-            const c = CURRENCIES[code];
+            const c = CURRENCIES[code], cs = numberCase(str, off, off + m.length, +cleanNum(int), true).cs;
             if (scale) { // 5 тис. грн → "п'ять тисяч гривень"
                 const unit = UNITS.find(u => new RegExp(`^(?:${u[0]})$`).test(scale));
-                const num = frac ? `${decimalWords(cleanNum(int), frac)} ${unit[2][3]}` : countWords(+cleanNum(int), unit[1], unit[2], isGen(str, off));
+                const num = frac ? `${decimalWords(cleanNum(int), frac)} ${unit[2][3]}` : countWords(+cleanNum(int), unit[1], unit[2], cs);
                 return keepDot(m, off, str, `${num} ${c.forms[2]}`);
             }
-            return keepDot(m, off, str, moneyWords(int, frac, code, isGen(str, off)));
+            return keepDot(m, off, str, moneyWords(int, frac, code, cs));
         });
 
         // Відсотки: 15% → "п'ятнадцять відсотків", 2,5% → "два з половиною відсотка"
         t = t.replace(new RegExp(`(${NUM})(?:[.,](\\d+))?\\s?%`, 'g'), (m, int, frac, off, str) => frac
             ? `${decimalWords(cleanNum(int), frac)} відсотка`
-            : countWords(+cleanNum(int), 'm', PERCENT_FORMS, isGen(str, off)));
+            : countWords(+cleanNum(int), 'm', PERCENT_FORMS, numberCase(str, off, off + m.length, +cleanNum(int), true).cs));
         t = t.replace(/(\S?)%/g, (m, pre) => `${pre}${pre && pre !== ' ' ? ' ' : ''}відсотків`);
 
         // Номер: №5, # 3
@@ -850,7 +1018,7 @@
         t = t.replace(/(?<![\d.,])(\d{1,3})(?:[.,](\d))?(″|")(?=[\s,.;)]|$)/g, (m, int, frac, q, off, str) => {
             if (q === '"' && (str.slice(0, off).match(/"/g) || []).length % 2) return m;
             const forms = ['дюйм', 'дюйми', 'дюймів', 'дюйма'];
-            return frac ? `${decimalWords(int, frac)} ${forms[3]}` : countWords(+int, 'm', forms, isGen(str, off));
+            return frac ? `${decimalWords(int, frac)} ${forms[3]}` : countWords(+int, 'm', forms, numberCase(str, off, off + m.length, +int, true).cs);
         });
 
         // Одиниці: 5 км, 2,5 кг, 3 тис., 10 млн
@@ -858,7 +1026,7 @@
             const rx = new RegExp(`(?<![\\d.,])(${NUM})(?:[.,](\\d+))?\\s?(?:${re})(?![${LETTER}\\d])`, 'g');
             t = t.replace(rx, (m, int, frac, off, str) => keepDot(m, off, str, frac
                 ? `${decimalWords(cleanNum(int), frac)} ${forms[3]}`
-                : countWords(+cleanNum(int), gender, forms, isGen(str, off))));
+                : countWords(+cleanNum(int), gender, forms, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)));
         });
         // За одиницю: гривень/міс → "гривень на місяць"
         PER.forEach(([re, words]) => {
@@ -895,7 +1063,10 @@
                 return `${ordinalWords(x, form)} – ${ordinalWords(y, form)}`;
             }
             if (GEN_PREPS.has(prep)) return `${numberToWordsGen(x, g)}-${numberToWordsGen(y, g)}`;
-            if (next && /^[а-яіїєґ]/.test(next) || RANGE_PREPS.has(prep)) return `${numberToWords(x, g)}-${numberToWords(y, g)}`;
+            if (next && /^[а-яіїєґ]/.test(next) || RANGE_PREPS.has(prep)) {
+                const cs = ACC_PREPS.has(prep) ? 'acc' : 'nom';
+                return `${numberToWordsCase(x, g, cs)}-${numberToWordsCase(y, g, cs)}`;
+            }
             return `від ${x === 0 ? 'нуля' : numberToWordsGen(x)} до ${numberToWordsGen(y)}`;
         });
 
@@ -918,14 +1089,17 @@
             const s = cleanNum(m);
             if (s.length > 1 && s[0] === '0') return digitsToWords(s);
             if (s.length > 15) return digitsToWords(s);
-            const next = wordAfter(str, off + m.length);
-            const g = next ? nounGender(next, +s) : 'm';
-            return isGen(str, off) ? numberToWordsGen(+s, g) : numberToWords(+s, g);
+            const next = nextWords(str, off + m.length, 1)[0] || wordAfter(str, off + m.length);
+            const c = numberCase(str, off, off + m.length, +s);
+            return numberToWordsCase(+s, c.g || (next ? nounGender(next, +s) : 'm'), c.cs);
         });
 
         // Скорочення
         ABBREVIATIONS.forEach(([re, rep, canEnd]) => {
-            t = t.replace(re, (m, pre, off, str) => canEnd ? keepDot(m, off, str, rep.replace('$1', pre)) : rep.replace('$1', pre));
+            t = t.replace(re, (m, pre, off, str) => {
+                const out = Array.isArray(rep) ? pre + rep[CASE_INDEX[placeCase(str, off + pre.length)]] : rep.replace('$1', pre);
+                return canEnd ? keepDot(m, off, str, out) : out;
+            });
         });
 
         // Символи між словами
@@ -1225,7 +1399,7 @@
         };
     }
 
-    const api = { version: '1.3.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, ordinalWords, plural };
+    const api = { version: '1.4.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
