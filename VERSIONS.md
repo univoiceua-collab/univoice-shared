@@ -12,24 +12,25 @@
 | 1.5.0 | 2026-10-12 | `b025c49c66132390c4fa2745ec9246f53c836d5b` | `univoice-speech.js`: вербалізатор для офіційних текстів — відмінки десяткових дробів («до 94,8%» → «до дев'яноста чотирьох цілих восьми десятих відсотка»), «№ 42/Б» → «сорок два дріб Б», ПрАТ, ПАТ, АТ, ТОВ, ФОП, ДП, КП повністю й у відмінку, абревіатури (АЕС, ККД) лишаються як є. Хрономір рахує час як раніше. Інші файли без змін |
 | 1.5.1 | 2026-10-12 | `fd84d2833a4ac460f082f1d1ecca1c39ed9223ae` | Вербалізатор: абревіатури, що читаються як слово (АЕС), лишаються як є; решта — по літерах з великої (ККД → «Ка-Ка-Де», КМДА → «Ка-Ем-Де-А»). Інші файли без змін |
 | 1.6.0 | 2026-10-12 | `1561108e89ad9348f6f469d7dd4e9a8638fe3a2c` | `univoice-speech.js`: технічні тексти — одиниці МВт, Гц, кВ, В, мс, МПа, дБ, ккал та інші; «±» → «плюс-мінус»; відмінок після «від мінус…»; дроби у відмінку («близько трьох четвертих»); коди моделей по літерах («МХ-200» → «Ем-Ікс-двісті»); «ISO 9001:2015»; «60 Вт» більше не стає вівторком; латинські абревіатури по літерах з великої («Ю-Ес-Ді»). Інші файли без змін |
+| 1.6.1 | 2026-10-12 | `50ffdeb788cacc44887eb43e9ca92c154399a20f` | `univoice-speech.js`: після числа — «п'ятдесят герц», «шістдесят ват», «двісті двадцять вольт», «сто мегагерц» (замість «-ів»). Інші файли без змін |
 
-## Рядки для Tilda (поточна версія 1.6.0)
+## Рядки для Tilda (поточна версія 1.6.1)
 
 Усі сторінки:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1561108e89ad9348f6f469d7dd4e9a8638fe3a2c/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1561108e89ad9348f6f469d7dd4e9a8638fe3a2c/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@50ffdeb788cacc44887eb43e9ca92c154399a20f/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@50ffdeb788cacc44887eb43e9ca92c154399a20f/univoice-ui.js"></script>
 ```
 
 Сторінки, яким потрібен Хрономір або вербалізатор (калькулятор, Наголошувач), — ще один рядок:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1561108e89ad9348f6f469d7dd4e9a8638fe3a2c/univoice-speech.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@50ffdeb788cacc44887eb43e9ca92c154399a20f/univoice-speech.js"></script>
 ```
 
 Наголошувачу (вербалізатор) — ще й словник вимови англійських слів:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@1561108e89ad9348f6f469d7dd4e9a8638fe3a2c/univoice-en.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@50ffdeb788cacc44887eb43e9ca92c154399a20f/univoice-en.js"></script>
 ```
