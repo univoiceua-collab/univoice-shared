@@ -193,8 +193,8 @@
         100: 'сот', 200: 'двохсот', 300: 'трьохсот', 400: 'чотирьохсот', 500: "п'ятисот", 600: 'шестисот', 700: 'семисот', 800: 'восьмисот', 900: "дев'ятисот",
     };
     const ORD_END = {
-        hard: { 'm.nom': 'ий', 'm.gen': 'ого', 'm.dat': 'ому', 'm.loc': 'ому', 'm.ins': 'им', 'f.nom': 'а', 'f.gen': 'ої', 'f.dat': 'ій', 'f.loc': 'ій', 'f.acc': 'у', 'f.ins': 'ою', 'n.nom': 'е', 'pl.nom': 'і', 'pl.gen': 'их', 'pl.ins': 'ими' },
-        soft: { 'm.nom': 'ій', 'm.gen': 'ього', 'm.dat': 'ьому', 'm.loc': 'ьому', 'm.ins': 'ім', 'f.nom': 'я', 'f.gen': 'ьої', 'f.dat': 'ій', 'f.loc': 'ій', 'f.acc': 'ю', 'f.ins': 'ьою', 'n.nom': 'є', 'pl.nom': 'і', 'pl.gen': 'іх', 'pl.ins': 'іми' },
+        hard: { 'pl.dat': 'им', 'm.nom': 'ий', 'm.gen': 'ого', 'm.dat': 'ому', 'm.loc': 'ому', 'm.ins': 'им', 'f.nom': 'а', 'f.gen': 'ої', 'f.dat': 'ій', 'f.loc': 'ій', 'f.acc': 'у', 'f.ins': 'ою', 'n.nom': 'е', 'pl.nom': 'і', 'pl.gen': 'их', 'pl.ins': 'ими' },
+        soft: { 'pl.dat': 'ім', 'm.nom': 'ій', 'm.gen': 'ього', 'm.dat': 'ьому', 'm.loc': 'ьому', 'm.ins': 'ім', 'f.nom': 'я', 'f.gen': 'ьої', 'f.dat': 'ій', 'f.loc': 'ій', 'f.acc': 'ю', 'f.ins': 'ьою', 'n.nom': 'є', 'pl.nom': 'і', 'pl.gen': 'іх', 'pl.ins': 'іми' },
     };
     const ordWord = (stem, form) => stem + ORD_END[stem === 'трет' ? 'soft' : 'hard'][form] ;
 
@@ -257,6 +257,7 @@
         const intPart = `${numberToWordsCase(int, 'f', cs)} ціл${ending(int)}`;
         const stem = { 1: 'десят', 2: 'сот', 3: 'тисячн', 4: 'десятитисячн' }[fracStr.length];
         if (!stem) return `${intPart} ${digitsToWords(fracStr)}`;
+        if (!frac) return `${intPart} нуль ${stem}их`;
         return `${intPart} ${numberToWordsCase(frac, 'f', cs)} ${stem}${ending(frac)}`;
     }
 
@@ -285,6 +286,35 @@
     // Одиниці після числа: "5 км" → "п'ять кілометрів"
     const UNITS = [
         ['км/год', 'm', ['кілометр на годину', 'кілометри на годину', 'кілометрів на годину', 'кілометра на годину']],
+        // техніка й енергетика
+        ['кВт[·\\-]?год', 'f', ['кіловат-година', 'кіловат-години', 'кіловат-годин', 'кіловат-години']],
+        ['МВт[·\\-]?год', 'f', ['мегават-година', 'мегават-години', 'мегават-годин', 'мегават-години']],
+        ['ГВт', 'm', ['гігават', 'гігавати', 'гігаватів', 'гігавата']],
+        ['МВт', 'm', ['мегават', 'мегавати', 'мегаватів', 'мегавата']],
+        ['мВт', 'm', ['міліват', 'мілівати', 'міліватів', 'мілівата']],
+        ['ГГц', 'm', ['гігагерц', 'гігагерци', 'гігагерців', 'гігагерца']],
+        ['МГц', 'm', ['мегагерц', 'мегагерци', 'мегагерців', 'мегагерца']],
+        ['кГц', 'm', ['кілогерц', 'кілогерци', 'кілогерців', 'кілогерца']],
+        ['Гц', 'm', ['герц', 'герци', 'герців', 'герца']],
+        ['кВ', 'm', ['кіловольт', 'кіловольти', 'кіловольтів', 'кіловольта']],
+        ['мВ', 'm', ['мілівольт', 'мілівольти', 'мілівольтів', 'мілівольта']],
+        ['В(?=\\s*(?:[.,;:)!?]|$))', 'm', ['вольт', 'вольти', 'вольтів', 'вольта']], // 220 В. (але не "5 В наявності")
+        ['кА', 'm', ['кілоампер', 'кілоампери', 'кілоамперів', 'кілоампера']],
+        ['мА', 'm', ['міліампер', 'міліампери', 'міліамперів', 'міліампера']],
+        ['мА·?год|мАг', 'f', ['міліампер-година', 'міліампер-години', 'міліампер-годин', 'міліампер-години']],
+        ['МПа', 'm', ['мегапаскаль', 'мегапаскалі', 'мегапаскалів', 'мегапаскаля']],
+        ['кПа', 'm', ['кілопаскаль', 'кілопаскалі', 'кілопаскалів', 'кілопаскаля']],
+        ['Па', 'm', ['паскаль', 'паскалі', 'паскалів', 'паскаля']],
+        ['дБ', 'm', ['децибел', 'децибели', 'децибелів', 'децибела']],
+        ['МДж', 'm', ['мегаджоуль', 'мегаджоулі', 'мегаджоулів', 'мегаджоуля']],
+        ['кДж', 'm', ['кілоджоуль', 'кілоджоулі', 'кілоджоулів', 'кілоджоуля']],
+        ['Дж', 'm', ['джоуль', 'джоулі', 'джоулів', 'джоуля']],
+        ['ккал', 'f', ['кілокалорія', 'кілокалорії', 'кілокалорій', 'кілокалорії']],
+        ['мс', 'f', ['мілісекунда', 'мілісекунди', 'мілісекунд', 'мілісекунди']],
+        ['мкс', 'f', ['мікросекунда', 'мікросекунди', 'мікросекунд', 'мікросекунди']],
+        ['нс', 'f', ['наносекунда', 'наносекунди', 'наносекунд', 'наносекунди']],
+        ['мкм', 'm', ['мікрометр', 'мікрометри', 'мікрометрів', 'мікрометра']],
+        ['нм', 'm', ['нанометр', 'нанометри', 'нанометрів', 'нанометра']],
         ['кв\\.\\s?м|м²|м2', 'm', ['квадратний метр', 'квадратні метри', 'квадратних метрів', 'квадратного метра']],
         ['км', 'm', ['кілометр', 'кілометри', 'кілометрів', 'кілометра']],
         ['см', 'm', ['сантиметр', 'сантиметри', 'сантиметрів', 'сантиметра']],
@@ -394,14 +424,14 @@
     // Абревіатури, які читаються як слово, а не по літерах
     const READ_AS_WORD = new Set(['ФОП', 'МОЗ', 'ЖЕК', 'ВООЗ', 'НАТО', 'ПАТ', 'ВАТ', 'ДАІ', 'ЦУМ', 'ГУМ', 'ВУЗ', 'ЗНО', 'ЮНЕСКО', 'НАСА', 'МАФ', 'ЦНАП', 'АЗС']);
     // Абревіатури, які читаються по літерах навіть серед великих літер
-    const SPELLED = new Set(['ТОВ', 'СБУ', 'ЗСУ', 'МВС', 'НБУ', 'США', 'ЄС', 'ООН', 'ПДВ', 'ЄДРПОУ', 'ПДФО', 'ДСНС', 'ОСББ', 'АТБ', 'ВНЗ', 'НМТ', 'СТО', 'КМУ', 'ДТП', 'ЖК', 'ТЦ', 'ТРЦ', 'ЄСВ', 'ІПН', 'ПП', 'ПрАТ', 'ЕКГ', 'УЗД', 'МРТ', 'ЛОР', 'ВВП', 'ІТ', 'ЄІБ', 'ЄБРР', 'МВФ']);
+    const SPELLED = new Set(['ДСТУ', 'НТУ', 'КПІ', 'ТОВ', 'СБУ', 'ЗСУ', 'МВС', 'НБУ', 'США', 'ЄС', 'ООН', 'ПДВ', 'ЄДРПОУ', 'ПДФО', 'ДСНС', 'ОСББ', 'АТБ', 'ВНЗ', 'НМТ', 'СТО', 'КМУ', 'ДТП', 'ЖК', 'ТЦ', 'ТРЦ', 'ЄСВ', 'ІПН', 'ПП', 'ПрАТ', 'ЕКГ', 'УЗД', 'МРТ', 'ЛОР', 'ВВП', 'ІТ', 'ЄІБ', 'ЄБРР', 'МВФ']);
     const SPECIAL_WORDS = { ІТ: 'ай-ті' };
 
     // Іншомовні слова: як їх вимовляють українською (ключ — малими літерами).
     // Слова, яких тут немає, читаються за правилами англійської вимови і позначаються «перевірте читання».
     // ✎ Додати слово: "слово:читання" через | (наприклад |nescafe:нескафе)
     const FOREIGN_WORDS = Object.fromEntries((
-        'under:андер|armour:армор|charles:чарльз|michael:майкл|jones:джонс|versace:версаче|balenciaga:баленсіага|burberry:барберрі|' +
+        'under:андер|armour:армор|iso:ісо|charles:чарльз|michael:майкл|jones:джонс|versace:версаче|balenciaga:баленсіага|burberry:барберрі|' +
         // техніка, сервіси, банки
         'apple:епл|iphone:айфон|ipad:айпед|imac:аймак|macbook:макбук|mac:мак|airpods:ейрподс|airtag:ейртег|watch:вотч|samsung:самсунг|galaxy:гелексі|' +
         'xiaomi:сяомі|redmi:редмі|poco:поко|huawei:хуавей|honor:хонор|oppo:оппо|realme:ріалмі|nokia:нокіа|motorola:моторола|sony:соні|playstation:плейстейшн|' +
@@ -734,7 +764,8 @@
         return phrase.split(/\s+/).filter(w => w && !/[A-Za-z\d]/.test(w) && w !== w.toUpperCase()).slice(0, k).map(w => w.toLowerCase());
     }
     function numberCase(str, off, end, n, unit) {
-        const prep = wordBefore(str, off);
+        const sign = str.slice(Math.max(0, off - 20), off).match(/(?:плюс-мінус|мінус|плюс)\s*$/); // від мінус 1 → як "від 1"
+        const prep = wordBefore(str, sign ? off - sign[0].length : off);
         const one = n % 10 === 1 && n % 100 !== 11;
         let g = null;
         if (!unit) {
@@ -882,6 +913,13 @@
             return `${pre}${/^\+/.test(ph) ? 'плюс ' : ''}${groups.map(digitGroup).join(', ')}`;
         });
 
+        // Коди моделей: Т-34 → "Те-тридцять чотири", МХ-200 → "Ем-Ікс-двісті" (Х у коді моделі — латинська «ікс»)
+        t = t.replace(/(?<![\p{L}\d-])([A-ZА-ЯІЇЄҐ]{1,4})-(?=\d)/gu, (m, code) => {
+            if (/^[A-Z]+$/.test(code) ? FOREIGN_WORDS[code.toLowerCase()] : (READ_AS_WORD.has(code) || !SPELLED.has(code) && UPPER_VOWEL.test(code) && !/[^АЕЄИІЇОУЮЯ]{2}/.test(code))) return m;
+            const letters = [...code].map(ch => ch === 'Х' ? 'ікс' : (LAT_LETTERS[ch] && /[A-Z]/.test(ch) ? LAT_LETTERS[ch] : CYR_LETTERS[ch] || ch)).join('-');
+            return `${verbal ? titleParts(letters) : letters}-`;
+        });
+
         // Латинські літери й цифри разом: S24 → "S 24", 5G → "5 G" (але 5GB — одиниця)
         t = t.replace(/(?<![A-Za-z])([A-Za-z]{1,3})(?=\d)/g, '$1 ').replace(/(\d)(?=[A-Za-z](?![A-Za-z]))/g, '$1 ');
 
@@ -892,7 +930,9 @@
         const dayRe = Object.keys(DAYS).join('|');
         t = t.replace(new RegExp(`(?<!\\p{L})(${dayRe})\\.?\\s?[-–—]\\s?(${dayRe})\\.?(?!\\p{L})`, 'giu'), (m, a, b) =>
             `з ${DAYS[a.toLowerCase()][1]} по ${DAYS[b.toLowerCase()][2]}`);
-        t = t.replace(new RegExp(`(?<!\\p{L})(${dayRe})\\.?(?=\\s?[,:]|\\s\\d)`, 'giu'), (m, a) => DAYS[a.toLowerCase()][0]);
+        t = t.replace(new RegExp(`(?<!\\p{L}|\\d\\s?)(${dayRe})\\.?(?=\\s?[,:]|\\s\\d)`, 'giu'), (m, a) => DAYS[a.toLowerCase()][0]);
+        const dayWords = Object.values(DAYS).map(d => d[0]).join('|'); // останній у переліку: "Пн, Вт, Пт." → "…, п'ятниця."
+        t = t.replace(new RegExp(`(?<=(?:${dayWords}),\\s?)(${dayRe})(?!\\p{L})`, 'giu'), (m, a) => DAYS[a.toLowerCase()][0]);
 
         // Час через крапку: о 18.00, з 9.00 до 18.00, 9.30-18.30 → як 18:00
         const roundMin = /^(?:00|15|30|45)$/;
@@ -989,6 +1029,7 @@
         });
 
         // Знаки перед числом: +5, -5, ~100 (до грошей і відсотків: "-50%" → "мінус п'ятдесят відсотків")
+        t = t.replace(/(^|[\s(])±\s?(?=\d)/g, '$1плюс-мінус ');
         t = t.replace(/(^|[\s(])\+\s?(?=\d)/g, '$1плюс ');
         t = t.replace(/(^|[\s(])-(?=\d)/g, '$1мінус ');
         t = t.replace(/(^|[\s(])[~≈]\s?(?=\d)/g, '$1близько ');
@@ -1063,9 +1104,14 @@
         t = t.replace(/(\d)\s?\+\s?(?=\d)/g, '$1 плюс ').replace(/(\d)\s?=\s?(?=\d)/g, '$1 дорівнює ');
         t = t.replace(/(\d)\+(?![\d\p{L}])/gu, '$1 плюс');
         t = t.replace(/\b(\d{1,2}):(\d{1,2})\b/g, '$1 ⁣$2');
+        t = t.replace(/\b(\d{3,6}):((?:19|20)\d\d)\b/g, '$1 ⁣$2'); // ДСТУ ISO 9001:2015
 
         // Дроби: 1/2 → "одна друга", 3/4 → "три четвертих", 2 1/2 → "два з половиною", 16/9 → "шістнадцять на дев'ять", 5/5 → "п'ять із п'яти"
-        const fraction = (n, d) => `${numberToWords(n, 'f')} ${ordinalWords(d, n % 10 === 1 && n % 100 !== 11 ? 'f.nom' : 'pl.gen')}`;
+        const fraction = (n, d, cs = 'nom') => {
+            const one = n % 10 === 1 && n % 100 !== 11;
+            const form = one ? `f.${cs === 'nom' || cs === 'acc' ? (cs === 'acc' ? 'acc' : 'nom') : cs}` : { dat: 'pl.dat', ins: 'pl.ins' }[cs] || 'pl.gen';
+            return `${numberToWordsCase(n, 'f', cs)} ${ordinalWords(d, form)}`;
+        };
         t = t.replace(/\b(\d{1,3}) (\d{1,2})\/(\d{1,2})\b/g, (m, i, a, b) => +a && +b > +a
             ? `${numberToWords(+i)} ${+a === 1 && +b === 2 ? 'з половиною' : 'і ' + fraction(+a, +b)}` : m);
         // Номер з дробом і літерою: № 42/Б → "сорок два дріб Б", справа 214/А-2 → "двісті чотирнадцять дріб А-два"
@@ -1076,7 +1122,7 @@
             if (/(?:будинок|буд|корпус|корп|кв|квартира|офіс|оф|№|номер|справа|наказ|рішення|протокол)\.?\s*$/i.test(str.slice(Math.max(0, off - 12), off))) return `${numberToWords(+a)} дріб ${numberToWords(+b)}`;
             if (+a === +b && +a !== 50) return `${numberToWords(+a)} із ${numberToWordsGen(+a)}`;
             if (+a >= +b) return `${numberToWords(+a)} на ${numberToWords(+b)}`;
-            return fraction(+a, +b);
+            return fraction(+a, +b, numberCase(str, off, off + m.length, +a, true).cs);
         });
 
         // Діапазони: 10-15 → "від десяти до п'ятнадцяти", 2-3 дні → "два-три дні", 1-2 години → "одна-дві години"
@@ -1163,9 +1209,14 @@
         return t.replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/ ([,.;:!?…)])/g, '$1').replace(/\( /g, '(').trim();
     }
 
+    // Абревіатура по літерах з великої: "ка-ка-де" → "Ка-Ка-Де"
+    const titleParts = (s) => s.split('-').map(p => p && p[0].toUpperCase() + p.slice(1)).join('-');
     // Великі літери як у джерелі: SALE → "СЕЙЛ", Apple → "Епл"
     function matchCase(src, out) {
-        if (src.length > 1 && src === src.toUpperCase()) return out.includes('-') || src.length < 4 ? out : out.toUpperCase();
+        if (src.length > 1 && src === src.toUpperCase()) { // USD → "Ю-Ес-Ді", ISO → "ІСО", але EUR → "євро"
+            if (out.includes('-')) return titleParts(out);
+            return /^(?:EUR|VW|LTD|INC|UA|COM|NET)$/.test(src) ? out : out.toUpperCase();
+        }
         if (src.length > 1 && src[0] !== src[0].toLowerCase()) return out[0].toUpperCase() + out.slice(1);
         return out;
     }
@@ -1196,14 +1247,15 @@
         const re = /[A-Za-zА-ЯІЇЄҐа-яіїєґ]+(?:[-'][A-Za-zА-ЯІЇЄҐа-яіїєґ]+)*/g;
         const tokens = [...t.matchAll(re)];
         const upper = tokens.map(m => m[0].length >= 2 && /^[A-ZА-ЯІЇЄҐ]+$/.test(m[0]));
-        const shout = tokens.map((m, i) => upper[i] && (readsAsWord(m[0]) || (/^[A-Z]+$/.test(m[0]) && !!FOREIGN_WORDS[m[0].toLowerCase()] && !FOREIGN_WORDS[m[0].toLowerCase()].includes('-'))));
+        const CODE = /^(?:USD|EUR|UAH|GBP|PLN|CHF)$/; // коди валют — не "крик" і завжди по літерах (крім EUR)
+        const shout = tokens.map((m, i) => upper[i] && !CODE.test(m[0]) && (readsAsWord(m[0]) || (/^[A-Z]+$/.test(m[0]) && !!FOREIGN_WORDS[m[0].toLowerCase()] && !FOREIGN_WORDS[m[0].toLowerCase()].includes('-'))));
         let out = '', last = 0;
         tokens.forEach((m, i) => {
             const w = m[0];
             let r = w;
             if (SPECIAL_WORDS[w]) r = SPECIAL_WORDS[w];
             else if (/[A-Za-z]/.test(w)) {
-                const inShout = upper[i] && (shout[i - 1] || shout[i + 1]) && UPPER_VOWEL.test(w);
+                const inShout = upper[i] && !CODE.test(w) && (shout[i - 1] || shout[i + 1]) && UPPER_VOWEL.test(w);
                 const spell = upper[i] && !shout[i] && !inShout;
                 let latin;
                 if (/[А-Яа-яІіЇїЄєҐґ]/.test(w)) { // Wi-Fi-роутер
@@ -1222,7 +1274,7 @@
                 if (shout[i] || inShout) r = verbal ? w : w.toLowerCase();
                 else if (!verbal) r = spellAcronym(w);
                 else if (!SPELLED.has(w) && UPPER_VOWEL.test(w) && !/[^АЕЄИІЇОУЮЯ]{2}/.test(w)) r = w; // АЕС, ОЕС читаються, як пишуться
-                else r = spellAcronym(w).split('-').map(p => p[0].toUpperCase() + p.slice(1)).join('-'); // ККД → "Ка-Ка-Де"
+                else r = titleParts(spellAcronym(w)); // ККД → "Ка-Ка-Де"
             }
             out += t.slice(last, m.index) + r;
             last = m.index + w.length;
@@ -1444,7 +1496,7 @@
         };
     }
 
-    const api = { version: '1.5.1', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.6.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
