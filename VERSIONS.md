@@ -14,24 +14,25 @@
 | 1.6.0 | 2026-10-12 | `1561108e89ad9348f6f469d7dd4e9a8638fe3a2c` | `univoice-speech.js`: технічні тексти — одиниці МВт, Гц, кВ, В, мс, МПа, дБ, ккал та інші; «±» → «плюс-мінус»; відмінок після «від мінус…»; дроби у відмінку («близько трьох четвертих»); коди моделей по літерах («МХ-200» → «Ем-Ікс-двісті»); «ISO 9001:2015»; «60 Вт» більше не стає вівторком; латинські абревіатури по літерах з великої («Ю-Ес-Ді»). Інші файли без змін |
 | 1.6.1 | 2026-10-12 | `50ffdeb788cacc44887eb43e9ca92c154399a20f` | `univoice-speech.js`: після числа — «п'ятдесят герц», «шістдесят ват», «двісті двадцять вольт», «сто мегагерц» (замість «-ів»). Інші файли без змін |
 | 1.6.2 | 2026-10-12 | `2f57a83d4818f8495ce9716373106673ab6a4868` | `univoice-speech.js`: родовий відмінок числа після «досягти», «потребувати», «зазнати», «у розмірі», «на рівні», «у сумі»: «досягла п'ятисот п'ятдесяти цілих двох десятих мегавата». Інші файли без змін |
+| 1.6.3 | 2026-10-12 | `a9e05d197e8d1f27c5e1c2501d890549f60917ea` | `univoice-ui.js`: пункт меню «Наголошувач» перейменовано на «Покращувач». Інші файли без змін |
 
-## Рядки для Tilda (поточна версія 1.6.2)
+## Рядки для Tilda (поточна версія 1.6.3)
 
 Усі сторінки:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@2f57a83d4818f8495ce9716373106673ab6a4868/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@2f57a83d4818f8495ce9716373106673ab6a4868/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@a9e05d197e8d1f27c5e1c2501d890549f60917ea/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@a9e05d197e8d1f27c5e1c2501d890549f60917ea/univoice-ui.js"></script>
 ```
 
 Сторінки, яким потрібен Хрономір або вербалізатор (калькулятор, Наголошувач), — ще один рядок:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@2f57a83d4818f8495ce9716373106673ab6a4868/univoice-speech.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@a9e05d197e8d1f27c5e1c2501d890549f60917ea/univoice-speech.js"></script>
 ```
 
 Наголошувачу (вербалізатор) — ще й словник вимови англійських слів:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@2f57a83d4818f8495ce9716373106673ab6a4868/univoice-en.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@a9e05d197e8d1f27c5e1c2501d890549f60917ea/univoice-en.js"></script>
 ```
