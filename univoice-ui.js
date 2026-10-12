@@ -229,7 +229,21 @@
         if (api) return api;
         insertMarkup();
         api = build();
+        reveal();
         return api;
+    }
+
+    // Сторінка з'являється плавно, коли меню вже на місці, сторінка домалювалась і шрифти завантажились
+    // (але не довше ніж за 0,8 с) — без різкої появи елементів по черзі
+    function reveal() {
+        const show = () => requestAnimationFrame(() => {
+            const b = document.body;
+            if (parseFloat(getComputedStyle(b).opacity) > 0.5) b.classList.add('vo-late');
+            b.classList.add('vo-ready');
+        });
+        const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+        const page = document.readyState === 'loading' ? new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true })) : Promise.resolve();
+        Promise.race([page.then(() => fonts), new Promise(r => setTimeout(r, 800))]).then(show, show);
     }
 
     function build() {

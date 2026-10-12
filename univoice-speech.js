@@ -1692,7 +1692,7 @@
         };
     }
 
-    const api = { version: '1.7.2', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.7.3', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
