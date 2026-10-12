@@ -763,6 +763,14 @@
             .replace(/^\s+(?:і|й|та|або|чи)\s+\d[\d ]*(?=\s|$)/, '');
         return phrase.split(/\s+/).filter(w => w && !/[A-Za-z\d]/.test(w) && w !== w.toUpperCase()).slice(0, k).map(w => w.toLowerCase());
     }
+    // Слова, після яких число в родовому: "досягла 550 МВт" → "п'ятисот п'ятдесяти", "у розмірі 500 грн", "на рівні 5%"
+    const GEN_VERB = /^(?:досяг|досягл|досягн|досяга|потребу|потребува|зазна|позбу|набу[вл]|розмірі|розміру|обсязі|обсягу|рівні|рівня|кількості|сумі|позначки|відмітки)/;
+    const SOFTENERS = /^(?:майже|приблизно|орієнтовно|лише|тільки|вже|ще|аж|навіть|щонайменше|рекордних|рекордного|рекордної|позначки)$/;
+    function genGoverned(str, off) {
+        const ws = wordsBefore(str, off, 3).reverse();
+        for (const w of ws) { if (GEN_VERB.test(w)) return true; if (!SOFTENERS.test(w)) return false; }
+        return false;
+    }
     function numberCase(str, off, end, n, unit) {
         const sign = str.slice(Math.max(0, off - 20), off).match(/(?:плюс-мінус|мінус|плюс)\s*$/); // від мінус 1 → як "від 1"
         const prep = wordBefore(str, sign ? off - sign[0].length : off);
@@ -777,7 +785,7 @@
                     if (/і$/.test(w) && /^(?:в|у|на|при)$/.test(prep)) return { cs: 'loc', g };
                     if (/(?:ій|ої|ою)$/.test(w)) { g = 'f'; continue; }
                     if (/(?:им|ім|ому|ого)$/.test(w)) continue;
-                    if (/(?:[^еоу]у|[^е]ю)$/.test(w) && !GEN_PREPS.has(prep) && !DAT_PREPS.has(prep) && prep !== 'по') return { cs: 'acc', g: 'f' }; // 1 книгу → "одну"
+                    if (/(?:[^еоу]у|[^е]ю)$/.test(w) && !GEN_PREPS.has(prep) && !DAT_PREPS.has(prep) && prep !== 'по' && !genGoverned(str, off)) return { cs: 'acc', g: 'f' }; // 1 книгу → "одну"
                 } else {
                     if (/(?:ами|ями|ими|іми|ьми)$/.test(w) && !NOT_INS.test(w)) return { cs: 'ins', g };
                     if (/(?:ах|ях)$/.test(w) && LOC_PREPS.has(prep)) return { cs: 'loc', g };
@@ -796,7 +804,7 @@
             }
         }
         if (/^(?:з|із|зі)$/.test(prep) && /^(?:згідно|разом|поруч|порівняно|нарівні|одночасно|поряд|слідом)$/.test(wordsBefore(str, off, 2)[0] || '')) return { cs: 'ins', g };
-        if (GEN_PREPS.has(prep)) return { cs: 'gen', g };
+        if (GEN_PREPS.has(prep) || genGoverned(str, sign ? off - sign[0].length : off)) return { cs: 'gen', g };
         if (INS_PREPS.has(prep)) return { cs: 'ins', g };
         if (DAT_PREPS.has(prep)) return { cs: 'dat', g };
         if (ACC_PREPS.has(prep) || isObject(str, off)) return { cs: 'acc', g };
@@ -1496,7 +1504,7 @@
         };
     }
 
-    const api = { version: '1.6.1', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.6.2', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
