@@ -10,24 +10,25 @@
 | 1.3.0 | 2026-10-11 | `380daa904ac8b29ce0a3b2d170af6ec2d0bf4f73` | Новий файл `univoice-en.js`: вербалізатор читає англійські слова, як вони звучать (Under Armour → «Андер Армор»). Хрономір: новий рядок після крапки не додає паузи, темп трохи швидший (пауза речення 0,45 с, PACE 0,98). `univoice-ui.css` і `univoice-ui.js` без змін |
 | 1.4.0 | 2026-10-11 | `c6557b61b315965fab0fb0e50f56d19b4f7157ae` | `univoice-speech.js`: числа й скорочення узгоджуються з реченням у всіх відмінках («з 3 трубами» → «з трьома трубами», «у 5 містах» → «у п'яти містах», «1 книгу» → «одну книгу», «в м. Київ по вул.» → «в місті Київ по вулиці»), нова функція `numberToWordsCase`; англійські імена Джеймс, Вільямс. Інші файли без змін |
 | 1.5.0 | 2026-10-12 | `b025c49c66132390c4fa2745ec9246f53c836d5b` | `univoice-speech.js`: вербалізатор для офіційних текстів — відмінки десяткових дробів («до 94,8%» → «до дев'яноста чотирьох цілих восьми десятих відсотка»), «№ 42/Б» → «сорок два дріб Б», ПрАТ, ПАТ, АТ, ТОВ, ФОП, ДП, КП повністю й у відмінку, абревіатури (АЕС, ККД) лишаються як є. Хрономір рахує час як раніше. Інші файли без змін |
+| 1.5.1 | 2026-10-12 | `fd84d2833a4ac460f082f1d1ecca1c39ed9223ae` | Вербалізатор: абревіатури, що читаються як слово (АЕС), лишаються як є; решта — по літерах з великої (ККД → «Ка-Ка-Де», КМДА → «Ка-Ем-Де-А»). Інші файли без змін |
 
-## Рядки для Tilda (поточна версія 1.5.0)
+## Рядки для Tilda (поточна версія 1.5.1)
 
 Усі сторінки:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@b025c49c66132390c4fa2745ec9246f53c836d5b/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@b025c49c66132390c4fa2745ec9246f53c836d5b/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@fd84d2833a4ac460f082f1d1ecca1c39ed9223ae/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@fd84d2833a4ac460f082f1d1ecca1c39ed9223ae/univoice-ui.js"></script>
 ```
 
 Сторінки, яким потрібен Хрономір або вербалізатор (калькулятор, Наголошувач), — ще один рядок:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@b025c49c66132390c4fa2745ec9246f53c836d5b/univoice-speech.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@fd84d2833a4ac460f082f1d1ecca1c39ed9223ae/univoice-speech.js"></script>
 ```
 
 Наголошувачу (вербалізатор) — ще й словник вимови англійських слів:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@b025c49c66132390c4fa2745ec9246f53c836d5b/univoice-en.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@fd84d2833a4ac460f082f1d1ecca1c39ed9223ae/univoice-en.js"></script>
 ```
