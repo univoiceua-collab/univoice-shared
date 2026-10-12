@@ -242,16 +242,22 @@
     }
 
     // Десятковий дріб: 2,5 → "два з половиною", 0,75 → "нуль цілих сімдесят п'ять сотих"
-    function decimalWords(intStr, fracStr) {
+    // cs — відмінок: до 94,8% → "до дев'яноста чотирьох цілих восьми десятих відсотка"
+    const FRACTION_END = {
+        one: { nom: 'а', acc: 'у', gen: 'ої', dat: 'ій', ins: 'ою', loc: 'ій' },
+        many: { nom: 'их', acc: 'их', gen: 'их', dat: 'им', ins: 'ими', loc: 'их' },
+    };
+    function decimalWords(intStr, fracStr, cs = 'nom') {
+        if (!FRACTION_END.one[cs]) cs = 'nom';
         const int = +intStr;
-        if (/^50*$/.test(fracStr)) return int === 1 ? 'півтора' : int === 0 ? 'пів' : `${numberToWords(int)} з половиною`;
+        if (/^50*$/.test(fracStr)) return int === 1 ? 'півтора' : int === 0 ? 'пів' : `${numberToWordsCase(int, 'm', cs)} з половиною`;
         const frac = +fracStr;
-        const intPart = `${numberToWords(int, 'f')} ${plural(int, ['ціла', 'цілих', 'цілих'])}`;
-        const denoms = { 1: ['десята', 'десятих'], 2: ['сота', 'сотих'], 3: ['тисячна', 'тисячних'], 4: ['десятитисячна', 'десятитисячних'] };
-        const d = denoms[fracStr.length];
-        if (!d) return `${intPart} ${digitsToWords(fracStr)}`;
-        const one = frac % 10 === 1 && frac % 100 !== 11;
-        return `${intPart} ${numberToWords(frac, 'f')} ${one ? d[0] : d[1]}`;
+        const isOne = (n) => n % 10 === 1 && n % 100 !== 11;
+        const ending = (n) => FRACTION_END[isOne(n) ? 'one' : 'many'][cs];
+        const intPart = `${numberToWordsCase(int, 'f', cs)} ціл${ending(int)}`;
+        const stem = { 1: 'десят', 2: 'сот', 3: 'тисячн', 4: 'десятитисячн' }[fracStr.length];
+        if (!stem) return `${intPart} ${digitsToWords(fracStr)}`;
+        return `${intPart} ${numberToWordsCase(frac, 'f', cs)} ${stem}${ending(frac)}`;
     }
 
     /* =================================================================
@@ -362,6 +368,25 @@
         [/(^|[\s(])с-ще(?![\p{L}])/gu, ['селище', 'селища', 'селищу', 'селищі', 'селищем', 'селище']],
         [/(^|[\s(])шт\.(?=[\s.,;:!?)]|$)/g, '$1штук', true],
     ];
+
+    // Організаційно-правові форми перед назвою: ПрАТ "Енергоатом" → "приватного акціонерного товариства «…»".
+    // [прикметники, іменник, хвіст]; ФОП — готові форми [називний, родовий, давальний, місцевий, орудний, знахідний]
+    const LEGAL_FORMS = {
+        ПрАТ: [['приватн', 'акціонерн'], 'товариств'], ПРАТ: [['приватн', 'акціонерн'], 'товариств'],
+        ПАТ: [['публічн', 'акціонерн'], 'товариств'], АТ: [['акціонерн'], 'товариств'],
+        ВАТ: [['відкрит', 'акціонерн'], 'товариств'], ЗАТ: [['закрит', 'акціонерн'], 'товариств'],
+        ТОВ: [[], 'товариств', ' з обмеженою відповідальністю'], ТДВ: [[], 'товариств', ' з додатковою відповідальністю'],
+        ДП: [['державн'], 'підприємств'], КП: [['комунальн'], 'підприємств'], ПП: [['приватн'], 'підприємств'],
+        ФОП: ['фізична особа-підприємець', 'фізичної особи-підприємця', 'фізичній особі-підприємцю', 'фізичній особі-підприємцю', 'фізичною особою-підприємцем', 'фізичну особу-підприємця'],
+    };
+    const NEUTER_ADJ = { nom: 'е', acc: 'е', gen: 'ого', dat: 'ому', loc: 'ому', ins: 'им' };
+    const NEUTER_NOUN = { nom: 'о', acc: 'о', gen: 'а', dat: 'у', loc: 'і', ins: 'ом' };
+    function legalForm(abbr, cs) {
+        const f = LEGAL_FORMS[abbr];
+        if (typeof f[0] === 'string') return f[CASE_INDEX[cs]];
+        const [adjs, noun, tail = ''] = f;
+        return [...adjs.map(a => a + NEUTER_ADJ[cs]), noun + NEUTER_NOUN[cs]].join(' ') + tail;
+    }
 
     // Назви літер для абревіатур
     const CYR_LETTERS = { А: 'а', Б: 'бе', В: 'ве', Г: 'ге', Ґ: 'ґе', Д: 'де', Е: 'е', Є: 'є', Ж: 'же', З: 'зе', И: 'и', І: 'і', Ї: 'ї', Й: 'йот', К: 'ка', Л: 'ел', М: 'ем', Н: 'ен', О: 'о', П: 'пе', Р: 'ер', С: 'ес', Т: 'те', У: 'у', Ф: 'еф', Х: 'ха', Ц: 'це', Ч: 'че', Ш: 'ша', Щ: 'ща', Ь: 'м’який знак', Ю: 'ю', Я: 'я' };
@@ -998,7 +1023,7 @@
             const c = CURRENCIES[code], cs = numberCase(str, off, off + m.length, +cleanNum(int), true).cs;
             if (scale) { // 5 тис. грн → "п'ять тисяч гривень"
                 const unit = UNITS.find(u => new RegExp(`^(?:${u[0]})$`).test(scale));
-                const num = frac ? `${decimalWords(cleanNum(int), frac)} ${unit[2][3]}` : countWords(+cleanNum(int), unit[1], unit[2], cs);
+                const num = frac ? `${decimalWords(cleanNum(int), frac, cs)} ${unit[2][3]}` : countWords(+cleanNum(int), unit[1], unit[2], cs);
                 return keepDot(m, off, str, `${num} ${c.forms[2]}`);
             }
             return keepDot(m, off, str, moneyWords(int, frac, code, cs));
@@ -1006,7 +1031,7 @@
 
         // Відсотки: 15% → "п'ятнадцять відсотків", 2,5% → "два з половиною відсотка"
         t = t.replace(new RegExp(`(${NUM})(?:[.,](\\d+))?\\s?%`, 'g'), (m, int, frac, off, str) => frac
-            ? `${decimalWords(cleanNum(int), frac)} відсотка`
+            ? `${decimalWords(cleanNum(int), frac, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)} відсотка`
             : countWords(+cleanNum(int), 'm', PERCENT_FORMS, numberCase(str, off, off + m.length, +cleanNum(int), true).cs));
         t = t.replace(/(\S?)%/g, (m, pre) => `${pre}${pre && pre !== ' ' ? ' ' : ''}відсотків`);
 
@@ -1018,14 +1043,14 @@
         t = t.replace(/(?<![\d.,])(\d{1,3})(?:[.,](\d))?(″|")(?=[\s,.;)]|$)/g, (m, int, frac, q, off, str) => {
             if (q === '"' && (str.slice(0, off).match(/"/g) || []).length % 2) return m;
             const forms = ['дюйм', 'дюйми', 'дюймів', 'дюйма'];
-            return frac ? `${decimalWords(int, frac)} ${forms[3]}` : countWords(+int, 'm', forms, numberCase(str, off, off + m.length, +int, true).cs);
+            return frac ? `${decimalWords(int, frac, numberCase(str, off, off + m.length, +int, true).cs)} ${forms[3]}` : countWords(+int, 'm', forms, numberCase(str, off, off + m.length, +int, true).cs);
         });
 
         // Одиниці: 5 км, 2,5 кг, 3 тис., 10 млн
         UNITS.forEach(([re, gender, forms]) => {
             const rx = new RegExp(`(?<![\\d.,])(${NUM})(?:[.,](\\d+))?\\s?(?:${re})(?![${LETTER}\\d])`, 'g');
             t = t.replace(rx, (m, int, frac, off, str) => keepDot(m, off, str, frac
-                ? `${decimalWords(cleanNum(int), frac)} ${forms[3]}`
+                ? `${decimalWords(cleanNum(int), frac, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)} ${forms[3]}`
                 : countWords(+cleanNum(int), gender, forms, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)));
         });
         // За одиницю: гривень/міс → "гривень на місяць"
@@ -1043,9 +1068,12 @@
         const fraction = (n, d) => `${numberToWords(n, 'f')} ${ordinalWords(d, n % 10 === 1 && n % 100 !== 11 ? 'f.nom' : 'pl.gen')}`;
         t = t.replace(/\b(\d{1,3}) (\d{1,2})\/(\d{1,2})\b/g, (m, i, a, b) => +a && +b > +a
             ? `${numberToWords(+i)} ${+a === 1 && +b === 2 ? 'з половиною' : 'і ' + fraction(+a, +b)}` : m);
+        // Номер з дробом і літерою: № 42/Б → "сорок два дріб Б", справа 214/А-2 → "двісті чотирнадцять дріб А-два"
+        t = t.replace(/(?<![\d.,\/])(\d{1,5})\s?\/\s?(?=\p{Lu}|\p{Ll}(?![\p{L}\/]))/gu, (m, a, off, str) =>
+            /(?:\p{L}|[\/])$/u.test(str.slice(0, off)) ? m : `${a} дріб `);
         t = t.replace(/\b(\d{1,4})\/(\d{1,4})\b/g, (m, a, b, off, str) => {
             if (!+b) return m;
-            if (/(?:будинок|буд|корпус|корп|кв|квартира|офіс|оф|№)\.?\s*$/i.test(str.slice(Math.max(0, off - 12), off))) return `${numberToWords(+a)} дріб ${numberToWords(+b)}`;
+            if (/(?:будинок|буд|корпус|корп|кв|квартира|офіс|оф|№|номер|справа|наказ|рішення|протокол)\.?\s*$/i.test(str.slice(Math.max(0, off - 12), off))) return `${numberToWords(+a)} дріб ${numberToWords(+b)}`;
             if (+a === +b && +a !== 50) return `${numberToWords(+a)} із ${numberToWordsGen(+a)}`;
             if (+a >= +b) return `${numberToWords(+a)} на ${numberToWords(+b)}`;
             return fraction(+a, +b);
@@ -1082,7 +1110,8 @@
         });
 
         // Десяткові дроби: 1,5 / 0.75
-        t = t.replace(new RegExp(`(?<![\\d.,])(${NUM})[.,](\\d+)(?![\\d.,]\\d)`, 'g'), (m, int, frac) => decimalWords(cleanNum(int), frac));
+        t = t.replace(new RegExp(`(?<![\\d.,])(${NUM})[.,](\\d+)(?![\\d.,]\\d)`, 'g'), (m, int, frac, off, str) =>
+            decimalWords(cleanNum(int), frac, numberCase(str, off, off + m.length, +cleanNum(int), true).cs));
 
         // Решта чисел: 1 000 000, 123, 007; рід за іменником: 1 година → "одна година", 2 кімнати → "дві кімнати"
         t = t.replace(new RegExp(`(${NUM})`, 'g'), (m, n, off, str) => {
@@ -1100,6 +1129,20 @@
                 const out = Array.isArray(rep) ? pre + rep[CASE_INDEX[placeCase(str, off + pre.length)]] : rep.replace('$1', pre);
                 return canEnd ? keepDot(m, off, str, out) : out;
             });
+        });
+
+        // Організаційно-правові форми: ТОВ «Сяйво» → "товариство з обмеженою відповідальністю «Сяйво»",
+        // дирекцією ПрАТ "Енергоатом" → "приватного акціонерного товариства"; після "та/і" — як у попередньої форми
+        // (лише у вербалізаторі: у Хрономірі ТОВ читається як "те-о-ве", щоб час не змінився)
+        let lastLegal = null;
+        if (verbal) t = t.replace(new RegExp(`(?<![\\p{L}\\d-])(${Object.keys(LEGAL_FORMS).join('|')})(?=\\s*[«"„“]|\\s+\\p{Lu})`, 'gu'), (m, abbr, off, str) => {
+            const prev = wordBefore(str, off);
+            let cs = /^(?:з|із|зі)$/.test(prev) ? 'ins' : placeCase(str, off); // договір з ДП → "з державним підприємством"
+            if (/^(?:і|й|та|або|чи)$/.test(prev) && lastLegal && off - lastLegal.end < 60) cs = lastLegal.cs;
+            else if (cs === 'nom' && prev && !/^(?:і|й|та|або|чи|а|але|це|як)$/.test(prev)) cs = 'gen'; // директор ТОВ → "директор товариства"
+            lastLegal = { end: off + m.length, cs };
+            const out = legalForm(abbr, cs);
+            return /(?:^|[.!?…]\s*|\n\s*)$/.test(str.slice(Math.max(0, off - 3), off)) || !off ? out[0].toUpperCase() + out.slice(1) : out;
         });
 
         // Символи між словами
@@ -1177,7 +1220,7 @@
             } else if (upper[i]) {
                 const inShout = (shout[i - 1] || shout[i + 1]) && !SPELLED.has(w) && UPPER_VOWEL.test(w);
                 if (shout[i] || inShout) r = verbal ? w : w.toLowerCase();
-                else r = spellAcronym(w);
+                else r = verbal ? w : spellAcronym(w); // диктор бачить абревіатуру як є: АЕС, ККД
             }
             out += t.slice(last, m.index) + r;
             last = m.index + w.length;
@@ -1399,7 +1442,7 @@
         };
     }
 
-    const api = { version: '1.4.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.5.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
