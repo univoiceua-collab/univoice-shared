@@ -18,24 +18,25 @@
 | 1.7.0 | 2026-10-12 | `ff3c9787e982d664cd645cb4ed0e264207d4e15a` | `univoice-speech.js`: номер будинку з літерою («7Б» → «сім бе»), класи («у 7-Б класі»); «один мільйон»; «США» без змін; «1 Гбіт/с» → «один гігабіт на секунду», «м/с», «об/хв», «грн/кг» → «за кілограм»; «у XXI ст.» → «у двадцять першому столітті»; рід числа не зі службових слів («рейс PS 101 до…» → «сто один»); українські назви латиницею («Zaporizhzhia» → «Запоріжжя»), усталені бренди («Forum» → «Форум», «Excel» → «Ексель»); літера L — «ель». Інші файли без змін |
 | 1.7.1 | 2026-10-12 | `175f907bea6d88c53019ff447b7e173f789090a3` | `univoice-speech.js`: «одна тисяча…» в усіх числах від 1 000 (у відмінку «однієї тисячі», «одну тисячу»; у роках — «тисяча дев'ятсот…»); родовий після «сягала»; знахідний після дієслів («виробило одну тисячу»); одиниці т (тонна), А·год (ампер-година), А, В після числа завжди. Інші файли без змін |
 | 1.7.2 | 2026-10-12 | `4a0aaf0ee1a7b853a38d76899a53cef0c650b318` | `univoice-speech.js`: координати («49°50′ пн. ш.» → «…градусів …хвилин північної широти»); одиниці к. с., Н·м, мм рт. ст., атм, бар, га, км², см², т·км, ц, Ом, мкФ, кВА, °F; «л/100 км», «ц/га», «м/с²»; «3 тис. т» → «три тисячі тонн»; знаки ≤ ≥ < > ‰ ½; родовий після «перевезення», «будівництво», «закупівля»; MAN, DAF, IVECO, SCANIA. Інші файли без змін |
+| 1.7.3 | 2026-10-12 | `7f98521a6b8aea41c1bd0dab6cacf3da213673ae` | Жовта кутова стрілочка ⌟ у полі тексту, жовта смуга прокрутки в Chrome; плавна поява сторінки без моргання |
 
-## Рядки для Tilda (поточна версія 1.7.2)
+## Рядки для Tilda (поточна версія 1.7.3)
 
 Усі сторінки:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@4a0aaf0ee1a7b853a38d76899a53cef0c650b318/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@4a0aaf0ee1a7b853a38d76899a53cef0c650b318/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@7f98521a6b8aea41c1bd0dab6cacf3da213673ae/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@7f98521a6b8aea41c1bd0dab6cacf3da213673ae/univoice-ui.js"></script>
 ```
 
 Сторінки, яким потрібен Хрономір або вербалізатор (калькулятор, Наголошувач), — ще один рядок:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@4a0aaf0ee1a7b853a38d76899a53cef0c650b318/univoice-speech.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@7f98521a6b8aea41c1bd0dab6cacf3da213673ae/univoice-speech.js"></script>
 ```
 
 Наголошувачу (вербалізатор) — ще й словник вимови англійських слів:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@4a0aaf0ee1a7b853a38d76899a53cef0c650b318/univoice-en.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@7f98521a6b8aea41c1bd0dab6cacf3da213673ae/univoice-en.js"></script>
 ```
