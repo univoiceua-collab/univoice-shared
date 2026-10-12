@@ -89,7 +89,8 @@
     }
 
     // Кількісне число: 1234 → "тисяча двісті тридцять чотири". gender: 'm' | 'f' | 'n'
-    function numberToWords(n, gender = 'm') {
+    // bare — "тисяча" без "одна" (для порядкових: "тисяча дев'ятсот дев'яносто перший")
+    function numberToWords(n, gender = 'm', bare = false) {
         n = Math.floor(Math.abs(n));
         if (n === 0) return 'нуль';
         if (!Number.isSafeInteger(n) || n >= 1e15) return digitsToWords(String(n));
@@ -99,7 +100,7 @@
             const k = Math.floor(rest / s.value);
             if (!k) return;
             rest %= s.value;
-            if (k === 1 && !out.length && s.value === 1e3) out.push(s.forms[0]); // "тисяча" без "одна", але "один мільйон"
+            if (k === 1 && !out.length && bare) out.push(s.forms[0]); // "одна тисяча", "один мільйон"; у роках — "тисяча"
             else out.push(...triad(k, s.gender), plural(k, s.forms));
         });
         if (rest) out.push(...triad(rest, gender));
@@ -172,8 +173,7 @@
             rest %= s.value;
             const forms = SCALE_CASES[s.value][cs];
             const one = k % 10 === 1 && k % 100 !== 11;
-            if (k === 1 && !out.length && s.value === 1e3) out.push(forms[0]);
-            else if (cs === 'acc') out.push(...triadCase(k, s.gender, cs), one ? forms[0] : plural(k, s.forms));
+            if (cs === 'acc') out.push(...triadCase(k, s.gender, cs), one ? forms[0] : plural(k, s.forms));
             else out.push(...triadCase(k, s.gender, cs), one ? forms[0] : forms[1]);
         });
         if (rest) out.push(...triadCase(rest, gender, cs));
@@ -211,7 +211,7 @@
         if (!Number.isSafeInteger(n) || n >= 1e15) return numberToWords(n);
         const t = n % 1000;
         if (t) {
-            const head = n - t ? numberToWords(n - t) + ' ' : '';
+            const head = n - t ? numberToWords(n - t, 'm', true) + ' ' : '';
             const h = Math.floor(t / 100) * 100, rest = t % 100;
             if (!rest) return head + ordWord(ORD_STEM[h], form);
             const prefix = (h ? HUNDREDS[h / 100] + ' ' : '');
@@ -222,7 +222,7 @@
             const k = Math.floor(n / s.value) % 1000;
             if (!k) continue;
             const higher = n - (n % (s.value * 1000));
-            const head = higher ? numberToWords(higher) + ' ' : '';
+            const head = higher ? numberToWords(higher, 'm', true) + ' ' : '';
             return head + combining(k) + ordWord(s.stem, form);
         }
         return numberToWords(n);
@@ -298,8 +298,9 @@
         ['Гц', 'm', ['герц', 'герци', 'герц', 'герца']],
         ['кВ', 'm', ['кіловольт', 'кіловольти', 'кіловольт', 'кіловольта']],
         ['мВ', 'm', ['мілівольт', 'мілівольти', 'мілівольт', 'мілівольта']],
-        ['В(?=\\s*(?:[.,;:)!?]|$))', 'm', ['вольт', 'вольти', 'вольт', 'вольта']], // 220 В. (але не "5 В наявності")
-        ['А(?=\\s*(?:[.,;:)!?]|$))', 'm', ['ампер', 'ампери', 'ампер', 'ампера']], // струм 5 А.
+        ['В(?!\\s+клас)', 'm', ['вольт', 'вольти', 'вольт', 'вольта']], // 220 В (велика В після числа — вольти; "в наявності" — мала)
+        ['А[·\\-]?год|Аг', 'f', ['ампер-година', 'ампер-години', 'ампер-годин', 'ампер-години']],
+        ['А(?!\\s+клас)', 'm', ['ампер', 'ампери', 'ампер', 'ампера']], // струм 5 А (але "5 А клас")
         ['кА', 'm', ['кілоампер', 'кілоампери', 'кілоампер', 'кілоампера']],
         ['мА', 'm', ['міліампер', 'міліампери', 'міліампер', 'міліампера']],
         ['мА·?год|мАг', 'f', ['міліампер-година', 'міліампер-години', 'міліампер-годин', 'міліампер-години']],
@@ -322,6 +323,7 @@
         ['см', 'm', ['сантиметр', 'сантиметри', 'сантиметрів', 'сантиметра']],
         ['мм', 'm', ['міліметр', 'міліметри', 'міліметрів', 'міліметра']],
         ['м', 'm', ['метр', 'метри', 'метрів', 'метра']],
+        ['т', 'f', ['тонна', 'тонни', 'тонн', 'тонни']],
         ['кг', 'm', ['кілограм', 'кілограми', 'кілограмів', 'кілограма']],
         ['мг', 'm', ['міліграм', 'міліграми', 'міліграмів', 'міліграма']],
         ['г|гр', 'm', ['грам', 'грами', 'грамів', 'грама']],
@@ -790,11 +792,18 @@
         const clause = str.slice(Math.max(0, offset - 60), offset).split(/[.!?;:\n]/).pop();
         return (clause.match(/[\p{L}']+/gu) || []).slice(-k).map(w => w.toLowerCase());
     }
+    const NOT_TRANSITIVE = /^(?:бул[аио]|був|стал[аио]|став|минул[аио]|минув|минає|минають|пройшл[аио]|пройшов|залишил[аио]|лишил[аио]|залишилось|відбул[аио]|настал[аио]|прийшл[аио]|прийшов|наступил[аио]|тривал[аио]|тривав|триває|тривають|йшл[аио]|ішл[аио]|ішов|йшов|лежал[аио]|стоял[аио]|жил[аио]|жив|становил[аио]?|налічувал[аио]|сяга\p{L}*|сягну\p{L}*|досяг\p{L}*|потребу\p{L}*|зріс|зросл[аио]|зростає|впал[аио]|впав|знизил\p{L}*|збільшил\p{L}*|зменшил\p{L}*|склал[аио]|склав)$/u;
+    const NOT_SUBJECT = /^(?:і|й|та|а|але|або|чи|що|як|це|то|не|ще|вже|вчора|сьогодні|завтра|тоді|потім|також|тільки|лише|майже|близько|понад|до|від|за|на|у|в|з|із|по|при|для|після|через|біля|протягом|всього|загалом|разом|приблизно)$/;
     function isObject(str, offset) {
         const [w1, w2] = wordsBefore(str, offset, 2).reverse();
         if (!w1) return false;
         if (/^(?:кошту\p{L}*)$/u.test(w1) || /(?:іть|йте|емо|ємо|имо|їмо)$/.test(w1)) return true;
-        return /\p{L}{2,}(?:ла|ли|ло|ав|ив|ів)$/u.test(w1) && !/^(?:бул[аио]|стал[аио]|був|став)$/.test(w1) && SUBJECTS.has(w2);
+        if (NOT_TRANSITIVE.test(w1)) return false;
+        if (/\p{L}{2,}(?:ла|ли|ло|ав|ив|ів)$/u.test(w1) && SUBJECTS.has(w2)) return true;
+        // "обладнання виробило 1 280 одиниць", "Андрій отримав 1 000 гривень", "завод виробляє 1 000 деталей" → "одну тисячу"
+        if (/\p{L}{2,}(?:ав|ив|ів|ув)$/u.test(w1)) return true;
+        if (/\p{L}{2,}(?:ла|ли|ло|ає|яє|ує|ить|ать|ять|ють|ають|ують)$/u.test(w1)) return w2 ? !NOT_SUBJECT.test(w2) : /(?:ли|ють|ують|ають|ять)$/.test(w1); // купили 1 200 квитків
+        return false;
     }
     // Наступні слова до кінця фрази без абревіатур, латиниці й інших чисел: "3 ДВП трубами" → ["трубами"],
     // "2 або 3 кімнатами" → ["кімнатами"]
@@ -804,7 +813,7 @@
         return phrase.split(/\s+/).filter(w => w && !/[A-Za-z\d]/.test(w) && w !== w.toUpperCase()).slice(0, k).map(w => w.toLowerCase());
     }
     // Слова, після яких число в родовому: "досягла 550 МВт" → "п'ятисот п'ятдесяти", "у розмірі 500 грн", "на рівні 5%"
-    const GEN_VERB = /^(?:досяг|досягл|досягн|досяга|потребу|потребува|зазна|позбу|набу[вл]|розмірі|розміру|обсязі|обсягу|рівні|рівня|кількості|сумі|позначки|відмітки)/;
+    const GEN_VERB = /^(?:сяга|сягн|сягну|досяг|досягл|досягн|досяга|потребу|потребува|зазна|позбу|набу[вл]|розмірі|розміру|обсязі|обсягу|рівні|рівня|кількості|сумі|позначки|відмітки)/;
     const SOFTENERS = /^(?:майже|приблизно|орієнтовно|лише|тільки|вже|ще|аж|навіть|щонайменше|рекордних|рекордного|рекордної|позначки)$/;
     function genGoverned(str, off) {
         const ws = wordsBefore(str, off, 3).reverse();
@@ -1622,7 +1631,7 @@
         };
     }
 
-    const api = { version: '1.7.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.7.1', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
