@@ -99,7 +99,7 @@
             const k = Math.floor(rest / s.value);
             if (!k) return;
             rest %= s.value;
-            if (k === 1 && !out.length) out.push(s.forms[0]); // "тисяча", "мільйон" без "одна/один"
+            if (k === 1 && !out.length && s.value === 1e3) out.push(s.forms[0]); // "тисяча" без "одна", але "один мільйон"
             else out.push(...triad(k, s.gender), plural(k, s.forms));
         });
         if (rest) out.push(...triad(rest, gender));
@@ -172,7 +172,7 @@
             rest %= s.value;
             const forms = SCALE_CASES[s.value][cs];
             const one = k % 10 === 1 && k % 100 !== 11;
-            if (k === 1 && !out.length) out.push(forms[0]);
+            if (k === 1 && !out.length && s.value === 1e3) out.push(forms[0]);
             else if (cs === 'acc') out.push(...triadCase(k, s.gender, cs), one ? forms[0] : plural(k, s.forms));
             else out.push(...triadCase(k, s.gender, cs), one ? forms[0] : forms[1]);
         });
@@ -299,6 +299,7 @@
         ['кВ', 'm', ['кіловольт', 'кіловольти', 'кіловольт', 'кіловольта']],
         ['мВ', 'm', ['мілівольт', 'мілівольти', 'мілівольт', 'мілівольта']],
         ['В(?=\\s*(?:[.,;:)!?]|$))', 'm', ['вольт', 'вольти', 'вольт', 'вольта']], // 220 В. (але не "5 В наявності")
+        ['А(?=\\s*(?:[.,;:)!?]|$))', 'm', ['ампер', 'ампери', 'ампер', 'ампера']], // струм 5 А.
         ['кА', 'm', ['кілоампер', 'кілоампери', 'кілоампер', 'кілоампера']],
         ['мА', 'm', ['міліампер', 'міліампери', 'міліампер', 'міліампера']],
         ['мА·?год|мАг', 'f', ['міліампер-година', 'міліампер-години', 'міліампер-годин', 'міліампер-години']],
@@ -315,6 +316,7 @@
         ['нс', 'f', ['наносекунда', 'наносекунди', 'наносекунд', 'наносекунди']],
         ['мкм', 'm', ['мікрометр', 'мікрометри', 'мікрометрів', 'мікрометра']],
         ['нм', 'm', ['нанометр', 'нанометри', 'нанометрів', 'нанометра']],
+        ['куб\\.\\s?м|м³|м3', 'm', ['кубічний метр', 'кубічні метри', 'кубічних метрів', 'кубічного метра']],
         ['кв\\.\\s?м|м²|м2', 'm', ['квадратний метр', 'квадратні метри', 'квадратних метрів', 'квадратного метра']],
         ['км', 'm', ['кілометр', 'кілометри', 'кілометрів', 'кілометра']],
         ['см', 'm', ['сантиметр', 'сантиметри', 'сантиметрів', 'сантиметра']],
@@ -329,8 +331,16 @@
         ['хв', 'f', ['хвилина', 'хвилини', 'хвилин', 'хвилини']],
         ['сек|с', 'f', ['секунда', 'секунди', 'секунд', 'секунди']],
         ['шт', 'f', ['штука', 'штуки', 'штук', 'штуки']],
+        ['Тбіт', 'm', ['терабіт', 'терабіти', 'терабіт', 'терабіта']],
+        ['Гбіт', 'm', ['гігабіт', 'гігабіти', 'гігабіт', 'гігабіта']],
+        ['Мбіт', 'm', ['мегабіт', 'мегабіти', 'мегабіт', 'мегабіта']],
+        ['[кК]біт', 'm', ['кілобіт', 'кілобіти', 'кілобіт', 'кілобіта']],
+        ['біт', 'm', ['біт', 'біти', 'біт', 'біта']],
+        ['ТБ|Тб|TB', 'm', ['терабайт', 'терабайти', 'терабайтів', 'терабайта']],
         ['ГБ|Гб|GB|Gb', 'm', ['гігабайт', 'гігабайти', 'гігабайтів', 'гігабайта']],
         ['МБ|Мб|MB|Mb', 'm', ['мегабайт', 'мегабайти', 'мегабайтів', 'мегабайта']],
+        ['КБ|кБ|Кб|KB', 'm', ['кілобайт', 'кілобайти', 'кілобайтів', 'кілобайта']],
+        ['об(?=\\/)', 'm', ['оберт', 'оберти', 'обертів', 'оберта']], // 3000 об/хв
         ['кВт', 'm', ['кіловат', 'кіловати', 'кіловат', 'кіловата']],
         ['Вт', 'm', ['ват', 'вати', 'ват', 'вата']],
         ['°C|°С|℃', 'm', ['градус Цельсія', 'градуси Цельсія', 'градусів Цельсія', 'градуса Цельсія']],
@@ -420,12 +430,14 @@
 
     // Назви літер для абревіатур
     const CYR_LETTERS = { А: 'а', Б: 'бе', В: 'ве', Г: 'ге', Ґ: 'ґе', Д: 'де', Е: 'е', Є: 'є', Ж: 'же', З: 'зе', И: 'и', І: 'і', Ї: 'ї', Й: 'йот', К: 'ка', Л: 'ел', М: 'ем', Н: 'ен', О: 'о', П: 'пе', Р: 'ер', С: 'ес', Т: 'те', У: 'у', Ф: 'еф', Х: 'ха', Ц: 'це', Ч: 'че', Ш: 'ша', Щ: 'ща', Ь: 'м’який знак', Ю: 'ю', Я: 'я' };
-    const LAT_LETTERS = { A: 'ей', B: 'бі', C: 'сі', D: 'ді', E: 'і', F: 'еф', G: 'джі', H: 'ейч', I: 'ай', J: 'джей', K: 'кей', L: 'ел', M: 'ем', N: 'ен', O: 'оу', P: 'пі', Q: "к'ю", R: 'ар', S: 'ес', T: 'ті', U: 'ю', V: 'ві', W: 'дабл-ю', X: 'ікс', Y: 'вай', Z: 'зет' };
+    const LAT_LETTERS = { A: 'ей', B: 'бі', C: 'сі', D: 'ді', E: 'і', F: 'еф', G: 'джі', H: 'ейч', I: 'ай', J: 'джей', K: 'кей', L: 'ель', M: 'ем', N: 'ен', O: 'оу', P: 'пі', Q: "к'ю", R: 'ар', S: 'ес', T: 'ті', U: 'ю', V: 'ві', W: 'дабл-ю', X: 'ікс', Y: 'вай', Z: 'зет' };
     // Абревіатури, які читаються як слово, а не по літерах
     const READ_AS_WORD = new Set(['ФОП', 'МОЗ', 'ЖЕК', 'ВООЗ', 'НАТО', 'ПАТ', 'ВАТ', 'ДАІ', 'ЦУМ', 'ГУМ', 'ВУЗ', 'ЗНО', 'ЮНЕСКО', 'НАСА', 'МАФ', 'ЦНАП', 'АЗС']);
     // Абревіатури, які читаються по літерах навіть серед великих літер
     const SPELLED = new Set(['ДСТУ', 'НТУ', 'КПІ', 'ТОВ', 'СБУ', 'ЗСУ', 'МВС', 'НБУ', 'США', 'ЄС', 'ООН', 'ПДВ', 'ЄДРПОУ', 'ПДФО', 'ДСНС', 'ОСББ', 'АТБ', 'ВНЗ', 'НМТ', 'СТО', 'КМУ', 'ДТП', 'ЖК', 'ТЦ', 'ТРЦ', 'ЄСВ', 'ІПН', 'ПП', 'ПрАТ', 'ЕКГ', 'УЗД', 'МРТ', 'ЛОР', 'ВВП', 'ІТ', 'ЄІБ', 'ЄБРР', 'МВФ']);
     const SPECIAL_WORDS = { ІТ: 'ай-ті' };
+    // Абревіатури, які у вербалізаторі лишаються як є (у Хрономірі читаються по літерах)
+    const KEEP_AS_IS = new Set(['США']);
 
     // Іншомовні слова: як їх вимовляють українською (ключ — малими літерами).
     // Слова, яких тут немає, читаються за правилами англійської вимови і позначаються «перевірте читання».
@@ -487,7 +499,34 @@
         'pack:пек|box:бокс|kit:кіт|set:сет|food-court:фуд-корт|drive:драйв|take:тейк|away:евей|to-go:ту-гоу|coworking:коворкінг|hub:хаб|space:спейс|' +
         'loft:лофт|craft:крафт|beer:бір|wine:вайн|cocktail:коктейль|brunch:бранч|breakfast:брекфаст|lunch:ланч|dinner:дінер|menu:меню|chef:шеф|' +
         'grand:гранд|royal:роял|palace:палас|plaza:плаза|tower:тауер|residence:резиденс|comfort:комфорт|town:таун|village:віледж|' +
-        'univoice:юнівойс|catalog:каталог|item:айтем|info:інфо|com:ком|net:нет|ua:юа|covid:ковід|nato:нато|nasa:наса|fifa:фіфа|uefa:уєфа|unicef:юнісеф|opec:опек|juice:джус|eur:євро|smoothie:смузі|burger-bar:бургер-бар|nike-air:найк-ейр|jordan:джордан|max-pro:макс-про|watch-ultra:вотч-ультра'
+        'univoice:юнівойс|catalog:каталог|item:айтем|info:інфо|com:ком|net:нет|ua:юа|covid:ковід|nato:нато|nasa:наса|fifa:фіфа|uefa:уєфа|unicef:юнісеф|opec:опек|juice:джус|eur:євро|smoothie:смузі|burger-bar:бургер-бар|nike-air:найк-ейр|jordan:джордан|max-pro:макс-про|watch-ultra:вотч-ультра|' +
+        // латиницею, але читаються «як написано» (не по-англійськи): Forum → «Форум», Excel → «Ексель»
+        'forum:форум|arena:арена|lavina:лавіна|gulliver:гуллівер|retroville:ретровіль|respublika:республіка|epicentr:епіцентр|karavan:караван|' +
+        'ocean:оушен|atmosfera:атмосфера|aladdin:аладдін|globus:глобус|panorama:панорама|victoria:вікторія|spartak:спартак|atlas:атлас|' +
+        'delta:дельта|alfa:альфа|alpha:альфа|omega:омега|gamma:гамма|beta:бета|sigma:сигма|fokus:фокус|kasta:каста|antoshka:антошка|' +
+        'opera:опера|leopolis:леополіс|yakaboo:якабу|fozzy:фоззі|tavria:таврія|ekonomia:економія|' +
+        'word:ворд|excel:ексель|onedrive:ван драйв|photoshop:фотошоп|illustrator:ілюстратор|premiere:прем\'єр|canva:канва|figma:фігма|jira:джира|' +
+        'discord:дискорд|trello:трелло|miro:міро|linux:лінукс|ubuntu:убунту|python:пайтон|macos:мак-о-ес|' +
+        'boeing:боїнг|airbus:ербас|ryanair:райанейр|wizz:візз|embraer:ембраер|pfizer:пфайзер|moderna:модерна|astrazeneca:астразенека|' +
+        'opel:опель|fiat:фіат|seat:сеат|cupra:купра|dacia:дачія|lada:лада|daewoo:деу|model:модель|' +
+        'autolux:автолюкс|raketa:ракета|diia:дія|prozorro:прозорро|oschadbank:ощадбанк|oschad:ощад|ukrsibbank:укрсиббанк|raiffeisen:райффайзен|' +
+        'sense:сенс|izibank:ізібанк|ukrzaliznytsia:укрзалізниця|intercity:інтерсіті|justin:джастін|epicentrk:епіцентр|' +
+        'poltava:полтава|rivne:рівне|lutsk:луцьк|ternopil:тернопіль|bukovel:буковель|mariupol:маріуполь|irpin:ірпінь|uzhhorod:ужгород|' +
+        'zaporizhzhia:запоріжжя|zaporizhia:запоріжжя|vinnytsia:вінниця|chernihiv:чернігів|chernivtsi:чернівці|zhytomyr:житомир|sumy:суми|' +
+        'cherkasy:черкаси|mykolaiv:миколаїв|kherson:херсон|donetsk:донецьк|luhansk:луганськ|kramatorsk:краматорськ|odessa:одеса|' +
+        'ivano-frankivsk:івано-франківськ|frankivsk:франківськ|khmelnytskyi:хмельницький|kropyvnytskyi:кропивницький|kryvyi:кривий|rih:ріг|' +
+        'bucha:буча|truskavets:трускавець|yaremche:яремче|karpaty:карпати|krym:крим|ukraina:україна|olx:о-ель-ікс|atb:а-те-бе|hawaii:гаваї|lyft:ліфт|revolut:револют|' +
+        'uman:умань|kalush:калуш|sambir:самбір|lyman:лиман|kovel:ковель|nikopol:нікополь|melitopol:мелітополь|sevastopol:севастополь|' +
+        'simferopol:сімферополь|mukachevo:мукачево|berehove:берегове|sloviansk:слов\'янськ|korosten:коростень|smila:сміла|pavlohrad:павлоград|' +
+        'kamianets:кам\'янець|podilskyi:подільський|brooklyn:бруклін|linia:лінія|' +
+        'oleksandr:олександр|oleksii:олексій|mykhailo:михайло|vasyl:василь|petro:петро|ivan:іван|taras:тарас|bohdan:богдан|ihor:ігор|oleh:олег|' +
+        'viktor:віктор|maksym:максим|artem:артем|denys:денис|yevhen:євген|kateryna:катерина|oksana:оксана|tetiana:тетяна|svitlana:світлана|' +
+        'halyna:галина|liudmyla:людмила|olha:ольга|iryna:ірина|olena:олена|yaroslav:ярослав|vladyslav:владислав|stanislav:станіслав|' +
+        'borys:борис|kostiantyn:костянтин|' +
+        'vita:віта|dolce:дольче|bella:белла|mafia:мафія|fiesta:фієста|siesta:сієста|sakura:сакура|karaoke:караоке|mojito:мохіто|' +
+        'tequila:текіла|bruschetta:брускета|prosecco:просекко|avocado:авокадо|kaizen:кайдзен|gelato:джелато|mozzarella:моцарела|pasta:паста|' +
+        'risotto:різото|tiramisu:тірамісу|pesto:песто|carbonara:карбонара|margherita:маргарита|pepperoni:пепероні|salami:салямі|' +
+        'ciabatta:чіабата|focaccia:фокача|nutella:нутелла|tomato:томато|banana:банана'
     ).split('|').map(p => p.split(':')));
 
     function spellAcronym(word) {
@@ -679,9 +718,10 @@
 
     // Рід іменника після числа, щоб узгодити "один / одна / одне", "два / дві"
     const FEM_STEMS = /^(?:годин|хвилин|секунд|доб|книг|книжк|особ|штук|тисяч|гривн|копійк|сторінк|пляшк|порці|кав|піц|чашк|ложк|кімнат|квартир|сері|частин|реч|ноч|зірк|позиці|послуг|акці|знижк|одиниц|пар[аиі]|машин|дитин|людин|сім'|родин|груп|категорі|мов[аиі]|ідеї|ідея|програм|зустріч|подорож|екскурсі|лекці|консультаці|процедур|сесі|ванн|спальн|хат|сумк|таблетк|капсул|упаковк|коробк|банк[аиі]$|верси|модел|функці|камер|гр[аиі]$|ігр|задач|вправ|відповід|помилк|зміна|змін[иі]|причин|секці|школ|ночі|доба|ставк|виплат|страв|піцу)/;
+    const NOT_NOUN = /^(?:до|по|на|за|від|о|об|у|в|з|із|зі|та|і|й|або|чи|що|як|це|то|не|вже|ще|але|а|тощо|після|перед|біля|через|під|над|для|без|про|при|між|також|теж|лише|тільки|вже|відправляється|прибуває|вилітає)$/;
     function nounGender(word, n) {
         const w = word.toLowerCase().replace(/[’ʼ]/g, "'");
-        if (!w) return 'm';
+        if (!w || NOT_NOUN.test(w)) return 'm'; // рейс 101 до Варшави → "сто один", а не "одне"
         if (FEM_STEMS.test(w) || /(?:ість|ості|ія|ії)$/.test(w)) return 'f';
         const n100 = n % 100, n10 = n % 10;
         if (n10 === 1 && n100 !== 11) {
@@ -858,6 +898,10 @@
     const ROMAN_M = /^(?:квартал|курс|клас|розділ|том|тур|етап|сезон|чемпіонат|форум|конкурс|пункт|параграф|турнір|корпус|поверх|з'їзд|фестивал|рів[ен]|ступ[іе]н|вік|кубк|кубок|міжнародн|всеукраїнськ|благодійн|ювілейн|щорічн|відкрит)/;
     const ROMAN_F = /^(?:глав|книг|серія|частин|груп|категорі|сесі|світов|олімпіад|ліг|конференці|рад|республік|династі|хвил|чверт|половин|ступін|світов)/;
     const ROMAN_N = /^(?:століт|сторіч|тисячоліт|скликан|ст\.$)/;
+    const ADDRESS_CTX = /(?:вул|вулиц|просп|пров|провулк|бульв|пл\.|площ|буд|будин|адрес|корп|кв\.|квартир|офіс|оф\.|кабінет|каб\.|аудитор|ауд\.|палат|№|номер|школ|ліце|гімназ|секці|під'їзд|блок|кімнат)/i;
+    // Кінець речення (але не крапка після вул., буд., кв. тощо)
+    const SENTENCE_END = /[!?\n]|(?<!(?:^|[\s(])(?:вул|буд|кв|пл|просп|пров|бульв|корп|оф|каб|ауд|м|с|смт|обл|ім|ст|р))\.\s+(?=\p{Lu})/u;
+    const CENTURY_GEN = /^(?:початку|початок|кінці|кінця|кінець|середині|середини|середина|наприкінці|рубежі|рубежу|рубіж|межі|половині|половини|половина|роки|років|роках|пам'ятка|пам'ятки|пам'ятку|історія|історії|мистецтво|мистецтва|архітектура|архітектури|література|літератури|культура|культури|події|подія)$/;
     function romanForm(word, gen) {
         const w = word.toLowerCase();
         let f = null;
@@ -875,11 +919,15 @@
     // Читання доменів: ua → "юа", com → "ком"
     const DOMAIN_WORDS = { ua: 'юа', com: 'ком', net: 'нет', org: 'орг', info: 'інфо', io: 'ай-о', me: 'мі', biz: 'біз', shop: 'шоп', store: 'стор', app: 'епп', dev: 'дев', eu: 'еу', pl: 'пе-ел', de: 'де', uk: 'юкей', tv: 'ті-ві', fm: 'еф-ем', co: 'ко', in: 'ін', online: 'онлайн', www: 'дабл-ю дабл-ю дабл-ю' };
     // За одиницю: 100 грн/міс → "сто гривень на місяць"
+    // "на" для швидкості й частоти (м/с → "метрів на секунду"), "за" — після ціни (грн/год → "гривень за годину")
     const PER = [
         ['міс(?:яць)?|мес', 'на місяць'], ['тиж(?:день)?', 'на тиждень'], ['день|дн', 'на день'], ['добу|доба', 'на добу'], ['рік', 'на рік'],
-        ['год(?:ину)?', 'за годину'], ['хв', 'за хвилину'], ['шт', 'за штуку'], ['кг', 'за кілограм'], ['л', 'за літр'], ['м²|м2|кв\\.\\s?м', 'за квадратний метр'],
-        ['ос(?:обу)?|люд(?:ину)?|чол', 'за особу'], ['ніч', 'за ніч'], ['км', 'за кілометр'], ['пару', 'за пару'], ['заняття', 'за заняття'],
+        ['год(?:ину)?', 'годину'], ['хв', 'хвилину'], ['с(?:ек)?', 'секунду'], ['кг', 'кілограм'], ['л', 'літр'],
+        ['м²|м2|кв\\.\\s?м', 'квадратний метр'], ['м³|м3|куб\\.\\s?м', 'кубічний метр'], ['км', 'кілометр'],
+        ['шт', 'за штуку'], ['ос(?:обу)?|люд(?:ину)?|чол', 'за особу'], ['ніч', 'за ніч'], ['пару', 'за пару'], ['заняття', 'за заняття'],
     ];
+    const PRICE_BEFORE = /(?:грн|гривн\p{L}*|гривен\p{L}*|гривень|долар\p{L}*|євро|цент\p{L}*|копій\p{L}*|копійк\p{L}*|фунт\p{L}*|злот\p{L}*|[$€₴])\s?$/u;
+    const RATE_BEFORE = /(?:метр|біт|байт|оберт|літр|кадр|раз|грам|ват|джоул)\p{L}*\s?$/u;
 
     // Перетворення тексту. verbal = true — для вербалізатора: зберігає вигляд тексту (рядки, емоджі, знаки),
     // позначає слова, прочитані «за правилами» (GUESS_START…GUESS_END)
@@ -929,7 +977,7 @@
         });
 
         // Латинські літери й цифри разом: S24 → "S 24", 5G → "5 G" (але 5GB — одиниця)
-        t = t.replace(/(?<![A-Za-z])([A-Za-z]{1,3})(?=\d)/g, '$1 ').replace(/(\d)(?=[A-Za-z](?![A-Za-z]))/g, '$1 ');
+        t = t.replace(/(?<![A-Za-z])([A-Za-z]+)(?=\d)/g, '$1 ').replace(/(\d)(?=[A-Za-z](?![A-Za-z]))/g, '$1 ');
 
         // Довгі ряди чисел через пробіл (123 123 123 123 123 …) — окремі числа, а не одне величезне
         t = t.replace(/(?<![\d.,])\d{1,3}(?: \d{3}){4,}(?!\d)/g, m => m.replace(/ /g, ' ⁣'));
@@ -1002,6 +1050,14 @@
         // о 9 ранку → "о дев'ятій ранку"
         t = t.replace(/(^|[^\p{L}])(о|об|О|Об)\s(1?\d|2[0-4])(?![\d,:\-]|\.\d)/gu, (m, pre, o, h) => `${pre}${o} ${ordinalWords(+h, 'f.loc')}`);
 
+        // Діапазон століть: XX–XXI ст. → "двадцяте–двадцять перше століття", у XIX–XX ст. → "у дев'ятнадцятому–двадцятому століттях"
+        t = t.replace(/(?<![\p{L}\d])([IVXІХ]{1,6})\s?[-–—]\s?([IVXІХ]{1,6})\s?(ст\.|століття|століттях|століть)/gu, (m, r1, r2, word, off, str) => {
+            const a = romanToInt(r1), b = romanToInt(r2);
+            if (!a || !b || a >= b) return m;
+            const pw = wordBefore(str, off);
+            const [f, tail] = pw === 'у' || pw === 'в' ? ['m.loc', 'століттях'] : GEN_PREPS.has(pw) || CENTURY_GEN.test(pw) ? ['m.gen', 'століть'] : ['n.nom', 'століття'];
+            return keepDot(m, off, str, `${ordinalWords(a, f)}–${ordinalWords(b, f)} ${tail}`);
+        });
         // Римські числа: XXI століття → "двадцять перше століття", у II кварталі → "у другому кварталі", ІІ курс → "другий курс"
         t = t.replace(/(?<![\p{L}\d])([IVXІХ]{1,6})(\s?)([\p{L}']+\.?)/gu, (m, r, sp, word, off, str) => {
             const n = romanToInt(r);
@@ -1009,8 +1065,13 @@
             const form = n && romanForm(word === 'ст.' ? word : w, isGen(str, off));
             if (!form || (!sp && word !== 'ст.')) return m;
             if (r.length === 1 && /^[ІХ]$/.test(r) && !ROMAN_N.test(word) && !/^(?:квартал|курс|клас|розділ|етап|тур|сезон|частин|груп|категорі)/.test(w.toLowerCase())) return m;
-            const tail = word === 'ст.' ? 'століття' : word;
-            return `${ordinalWords(n, form)}${sp || ' '}${tail}`;
+            let f = form, tail = word === 'ст.' ? 'століття' : word;
+            if (word === 'ст.') { // у XXI ст. → "у двадцять першому столітті", на початку XX ст. → "двадцятого століття"
+                const pw = wordBefore(str, off);
+                if (pw === 'у' || pw === 'в') { f = 'm.loc'; tail = 'столітті'; }
+                else if (CENTURY_GEN.test(pw)) f = 'm.gen';
+            }
+            return word === 'ст.' ? keepDot(m, off, str, `${ordinalWords(n, f)} ${tail}`) : `${ordinalWords(n, f)}${sp || ' '}${tail}`;
         });
         // Іменник перед римським числом: розділ IV → "розділ четвертий", глава II → "глава друга"
         t = t.replace(/(?<!\p{L})([\p{L}']{2,})\s([IVXІХ]{1,6})(?![\p{L}\d])/gu, (m, word, r) => {
@@ -1095,6 +1156,16 @@
             return frac ? `${decimalWords(int, frac, numberCase(str, off, off + m.length, +int, true).cs)} ${forms[3]}` : countWords(+int, 'm', forms, numberCase(str, off, off + m.length, +int, true).cs);
         });
 
+        // Номер з літерою: вул. Під Дубом, 7Б → "сім бе", 12-А → "дванадцять а", у 7-Б класі → "у сьомому бе класі"
+        t = t.replace(/(?<![\p{L}\d.,\/-])(\d{1,4})-?([А-ЯІЇЄҐа-яіїєґ])(?![\p{L}\d-])(\s+клас\p{L}*)?/gu, (m, n, l, klas, off, str) => {
+            const up = l.toUpperCase();
+            if (klas) return `${ordinalWords(+n, romanForm(klas.trim(), false) || 'm.nom')} ${CYR_LETTERS[up]}${klas}`;
+            const ctx = ADDRESS_CTX.test(str.slice(Math.max(0, off - 50), off).split(SENTENCE_END).pop());
+            if (!ctx && (l !== up || /[АВКСХЬ]/.test(up))) return m; // 220В — вольти, 100К — тисячі, 5г — грами
+            if (up === 'Ь') return m;
+            return `${numberToWords(+n)} ${CYR_LETTERS[up]}`;
+        });
+
         // Одиниці: 5 км, 2,5 кг, 3 тис., 10 млн
         UNITS.forEach(([re, gender, forms]) => {
             const rx = new RegExp(`(?<![\\d.,])(${NUM})(?:[.,](\\d+))?\\s?(?:${re})(?![${LETTER}\\d])`, 'g');
@@ -1102,9 +1173,19 @@
                 ? `${decimalWords(cleanNum(int), frac, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)} ${forms[3]}`
                 : countWords(+cleanNum(int), gender, forms, numberCase(str, off, off + m.length, +cleanNum(int), true).cs)));
         });
+        // 100К підписників → "сто тисяч"; решта "число+літера": 1С → "один ес"
+        t = t.replace(/(?<![\p{L}\d.,\/-])(\d{1,3})[Кк](?![\p{L}\d-])/gu, (m, n, off, str) =>
+            countWords(+n, 'f', ['тисяча', 'тисячі', 'тисяч', 'тисячі'], numberCase(str, off, off + m.length, +n, true).cs));
+        t = t.replace(/(?<![\p{L}\d.,\/-])(\d{1,4})-?([А-ЯІЇЄҐ])(?![\p{L}\d-])/gu, (m, n, l) => (CYR_LETTERS[l] && l !== 'Ь' ? `${n} ${CYR_LETTERS[l]}` : m));
+
         // За одиницю: гривень/міс → "гривень на місяць"
         PER.forEach(([re, words]) => {
-            t = t.replace(new RegExp(`(?<=[\\p{L}\\d])\\s?\\/\\s?(?:${re})\\.?(?![\\p{L}\\d])`, 'gu'), ` ${words}`);
+            t = t.replace(new RegExp(`(?<=[\\p{L}\\d])\\s?\\/\\s?(?:${re})\\.?(?![\\p{L}\\d])`, 'gu'), (m, off, str) => {
+                if (/^(?:на|за) /.test(words)) return keepDot(m, off, str, ` ${words}`);
+                const before = str.slice(Math.max(0, off - 30), off);
+                if (words === 'секунду' && !RATE_BEFORE.test(before)) return m; // а/с — не "на секунду"
+                return keepDot(m, off, str, ` ${PRICE_BEFORE.test(before) ? 'за' : 'на'} ${words}`);
+            });
         });
 
         // Дії й рахунок: 2+2=4 → "два плюс два дорівнює чотири", 24/7 → "двадцять чотири на сім", 3:1 → "три – один", 18+ → "вісімнадцять плюс"
@@ -1127,7 +1208,8 @@
             /(?:\p{L}|[\/])$/u.test(str.slice(0, off)) ? m : `${a} дріб `);
         t = t.replace(/\b(\d{1,4})\/(\d{1,4})\b/g, (m, a, b, off, str) => {
             if (!+b) return m;
-            if (/(?:будинок|буд|корпус|корп|кв|квартира|офіс|оф|№|номер|справа|наказ|рішення|протокол)\.?\s*$/i.test(str.slice(Math.max(0, off - 12), off))) return `${numberToWords(+a)} дріб ${numberToWords(+b)}`;
+            if (/(?:будинок|буд|корпус|корп|кв|квартира|офіс|оф|№|номер|справа|наказ|рішення|протокол)\.?\s*$/i.test(str.slice(Math.max(0, off - 12), off))
+                || /(?:вул|вулиц|просп|пров|провулк|бульв|площ|адрес)\p{L}*\.?\s[^.!?\n]{0,30},\s*$/iu.test(str.slice(Math.max(0, off - 50), off))) return `${numberToWords(+a)} дріб ${numberToWords(+b)}`;
             if (+a === +b && +a !== 50) return `${numberToWords(+a)} із ${numberToWordsGen(+a)}`;
             if (+a >= +b) return `${numberToWords(+a)} на ${numberToWords(+b)}`;
             return fraction(+a, +b, numberCase(str, off, off + m.length, +a, true).cs);
@@ -1225,7 +1307,12 @@
             if (out.includes('-')) return titleParts(out);
             return /^(?:EUR|VW|LTD|INC|UA|COM|NET)$/.test(src) ? out : out.toUpperCase();
         }
-        if (src.length > 1 && src[0] !== src[0].toLowerCase()) return out[0].toUpperCase() + out.slice(1);
+        const sp = src.split('-'), op = out.split('-');
+        if (sp.length > 1 && sp.length === op.length && sp.every(p => /^[A-ZА-ЯІЇЄҐ][a-zа-яіїєґ']{2,}$/.test(p))) // Ivano-Frankivsk, Coca-Cola
+            return op.map(p => p[0].toUpperCase() + p.slice(1)).join('-');
+        if (src.length === 1 && /[A-Z]/.test(src)) return out[0].toUpperCase() + out.slice(1); // Galaxy S24 → «Ес»
+        if (/^[A-Z][a-z]+[A-Z]/.test(src) && out.includes(' ')) return out.replace(/(^|\s)(\S)/g, (x, b, c) => b + c.toUpperCase()); // OneDrive → «Ван Драйв»
+        if (src.length > 1 && (src[0] !== src[0].toLowerCase() || /[A-Z]/.test(src))) return out[0].toUpperCase() + out.slice(1); // iPhone → «Айфон»
         return out;
     }
 
@@ -1234,6 +1321,7 @@
         const key = w.toLowerCase();
         if (FOREIGN_WORDS[key]) return { r: FOREIGN_WORDS[key], guess: false };
         if (spell) return { r: spellAcronym(w), guess: false };
+        if (UA_STRONG.test(key) && !/[qwx]|c(?!h)|th|ee|oo|ea|ou|ow|ph|wh|ck/.test(key)) return { r: translitUa(key), guess: false };
         const en = englishReading(w);
         if (en) return { r: en, guess: false };
         if (/-/.test(w)) { // Wi-Fi-роутер, e-commerce
@@ -1246,7 +1334,32 @@
             return { r: parts.map(p => p.r).join(''), guess: parts.some(p => p.guess) };
         }
         if (w.length === 1) return { r: LAT_LETTERS[w.toUpperCase()], guess: false };
+        if (UA_WEAK.test(key) && !/[qwx]|c(?!h)|th|ee|oo|ea|ou|ow|ay|ey/.test(key)) return { r: translitUa(key), guess: true };
         return { r: translitEn(w), guess: true };
+    }
+
+    // Українське слово латиницею (транслітерація): Kopiyka → «Копійка», Velyka Kyshenya → «Велика Кишеня», Vinnytsia → «Вінниця».
+    // UA_STRONG — ознаки, яких в англійських словах майже не буває; UA_WEAK — лише для слів, яких немає в англійському словнику
+    const UA_STRONG = /kh|zh|shch|iy|yy|iia|iiu|ii$|chk|shk|nyk|yts|ivsk|[oe]vsk|[aey]nsk|ivka|yi$|enko$|chuk$|iuk$|ych$|iv$|ske$|tsia$|yn$|yr$/;
+    const UA_WEAK = /[^aeiouy]y[^aeiouy]|ya|yu|ye|ts|ia$|[ao]$|ok$|sk$|^j[aeiou]/;
+    const UA_LAT = { a: 'а', b: 'б', c: 'ц', d: 'д', e: 'е', f: 'ф', g: 'г', h: 'г', i: 'і', j: 'й', k: 'к', l: 'л', m: 'м', n: 'н', o: 'о', p: 'п', q: 'к', r: 'р', s: 'с', t: 'т', u: 'у', v: 'в', w: 'в', x: 'кс', y: 'и', z: 'з' };
+    const UA_IOT = { a: 'я', e: 'є', u: 'ю', i: 'ї' };
+    function translitUa(w) {
+        const R = (re, x) => { w = w.replace(re, x); };
+        R(/shch/g, 'щ'); R(/zgh/g, 'зг'); R(/zh/g, 'ж'); R(/kh/g, 'х'); R(/ts/g, 'ц'); R(/ch/g, 'ч'); R(/sh/g, 'ш');
+        R(/(^|-)y([aeiu])/g, (m, b, v) => b + UA_IOT[v]); // Yahotyn → «Яготин», Yuliia → «Юлія»
+        R(/ii([aeu])/g, (m, v) => 'і' + UA_IOT[v]);       // Oleksandriia → «Олександрія»
+        R(/yi([aeu])/g, (m, v) => 'и' + UA_IOT[v]);       // Kolomyia → «Коломия»
+        R(/yi$/, 'ий'); R(/yi(?=-)/g, 'ий'); R(/ii$/, 'ій'); R(/ii(?=n)/g, 'ій'); R(/ii/g, 'ії'); R(/iy(?![aeiou])/g, 'ій'); R(/yi/g, 'иї');
+        R(/([bpvmf])i([aeu])/g, (m, c, v) => c + "'" + UA_IOT[v]); // Kamianets → «Кам'янець»
+        R(/i([aeu])/g, (m, v) => UA_IOT[v]);              // Vinnytsia → «Вінниця», Shchastia → «Щастя»
+        R(/[jy]([aeu])/g, (m, v) => UA_IOT[v]);           // Kyshenya → «Кишеня»
+        R(/[jy]o/g, 'йо');
+        R(/([aeouаеоу])i(?![aeiou])/g, '$1й');            // Boiko → «Бойко»
+        w = w.replace(/[a-z]/g, ch => UA_LAT[ch]);
+        // м'який знак, якого немає в транслітерації: Тернопіль, Луцьк, Покровськ, Кам'янське, Подільський
+        R(/([іе])л$/, '$1ль'); R(/([іе])л(?=-)/g, '$1ль'); R(/([цс])к(ий|е|а|ої|ого)?(?=$|-)/g, '$1ьк$2'); R(/лськ/g, 'льськ'); R(/ец(?=$|-)/g, 'ець');
+        return w;
     }
 
     // Абревіатури по літерах (ТОВ → "те-о-ве"), але слова, написані великими для наголосу, читаються як слова:
@@ -1272,15 +1385,20 @@
                         const isLat = /^[A-Za-z']+$/.test(p), prev = parts[parts.length - 1];
                         if (isLat && prev && prev.lat) prev.s += '-' + p; else parts.push({ s: p, lat: isLat });
                     });
-                    const read = parts.map(p => (p.lat ? readLatin(p.s, p.s.length > 1 && p.s === p.s.toUpperCase() && !readsAsWord(p.s)) : { r: p.s, guess: false }));
-                    latin = { r: read.map(p => p.r).join('-'), guess: read.some(p => p.guess) };
+                    const read = parts.map(p => {
+                        if (!p.lat) return { r: p.s, guess: false };
+                        const x = readLatin(p.s, p.s.length > 1 && p.s === p.s.toUpperCase() && !readsAsWord(p.s));
+                        return { r: verbal ? matchCase(p.s, x.r) : x.r, guess: x.guess }; // USB-флешку → «Ю-Ес-Бі-флешку»
+                    });
+                    latin = { r: read.map(p => p.r).join('-'), guess: read.some(p => p.guess), mixed: true };
                 } else latin = readLatin(w, spell);
-                r = verbal ? matchCase(w, latin.r) : latin.r;
+                r = verbal && !latin.mixed ? matchCase(w, latin.r) : latin.r;
                 if (verbal && latin.guess) r = GUESS_START + r + GUESS_END;
             } else if (upper[i]) {
                 const inShout = (shout[i - 1] || shout[i + 1]) && !SPELLED.has(w) && UPPER_VOWEL.test(w);
                 if (shout[i] || inShout) r = verbal ? w : w.toLowerCase();
                 else if (!verbal) r = spellAcronym(w);
+                else if (KEEP_AS_IS.has(w)) r = w; // США — усі читають звично
                 else if (!SPELLED.has(w) && UPPER_VOWEL.test(w) && !/[^АЕЄИІЇОУЮЯ]{2}/.test(w)) r = w; // АЕС, ОЕС читаються, як пишуться
                 else r = titleParts(spellAcronym(w)); // ККД → "Ка-Ка-Де"
             }
@@ -1388,7 +1506,7 @@
             const re = /([\p{L}\p{N}]*)([.!?…]+["»”)]*)(\s+)(?=[\p{Lu}«"])/gu;
             let m;
             while ((m = re.exec(line))) {
-                if (m[2][0] === '.' && /^\p{L}{0,3}$/u.test(m[1])) continue; // м. Київ, 100 грн. Далі — не ділимо
+                if (m[2][0] === '.' && /^(?:\p{L}{0,3}|просп|бульв|пров|корп|напр|проф|акад|доц|заст|канд|мкр|мкрн)$/iu.test(m[1])) continue; // м. Київ, просп. Перемоги, 100 грн. Далі — не ділимо
                 const end = m.index + m[0].length - m[3].length;
                 segment(line.slice(start, end), pos + start);
                 parts.push({ t: m[3], changed: false, src: [pos + end, pos + end + m[3].length] });
@@ -1504,7 +1622,7 @@
         };
     }
 
-    const api = { version: '1.6.2', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.7.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
