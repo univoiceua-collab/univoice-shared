@@ -33,7 +33,7 @@
     //    name — назва в сайдбарі, short — назва в мобільному меню
     const MENU = [
         { href: '/calculator', icon: 'fa-calculator',         name: 'Вартість',          short: 'Вартість' },
-        { href: '/stress',     icon: 'fa-spell-check',        name: 'Наголошувач',       short: 'Наголошувач' },
+        { href: '/stress',     icon: 'fa-spell-check',        name: 'Покращувач',        short: 'Покращувач' },
         { href: '',            icon: 'fa-user',               name: 'Особистий кабінет', short: 'Кабінет' },
         { href: '',            icon: 'fa-magnifying-glass',   name: 'База дикторів',     short: 'Диктори' },
         { href: '',            icon: 'fa-gear',               name: 'Інструменти',       short: 'Інструменти' },
