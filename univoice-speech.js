@@ -1220,7 +1220,9 @@
             } else if (upper[i]) {
                 const inShout = (shout[i - 1] || shout[i + 1]) && !SPELLED.has(w) && UPPER_VOWEL.test(w);
                 if (shout[i] || inShout) r = verbal ? w : w.toLowerCase();
-                else r = verbal ? w : spellAcronym(w); // диктор бачить абревіатуру як є: АЕС, ККД
+                else if (!verbal) r = spellAcronym(w);
+                else if (!SPELLED.has(w) && UPPER_VOWEL.test(w) && !/[^АЕЄИІЇОУЮЯ]{2}/.test(w)) r = w; // АЕС, ОЕС читаються, як пишуться
+                else r = spellAcronym(w).split('-').map(p => p[0].toUpperCase() + p.slice(1)).join('-'); // ККД → "Ка-Ка-Де"
             }
             out += t.slice(last, m.index) + r;
             last = m.index + w.length;
@@ -1442,7 +1444,7 @@
         };
     }
 
-    const api = { version: '1.5.0', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
+    const api = { version: '1.5.1', CONFIG, analyze, normalize, verbalize, verbalizeParts, setEnglish, numberToWords, numberToWordsGen, numberToWordsCase, ordinalWords, plural };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.UnivoiceSpeech = api;
 })(typeof window !== 'undefined' ? window : this);
