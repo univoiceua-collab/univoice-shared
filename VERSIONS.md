@@ -16,24 +16,25 @@
 | 1.6.2 | 2026-10-12 | `2f57a83d4818f8495ce9716373106673ab6a4868` | `univoice-speech.js`: родовий відмінок числа після «досягти», «потребувати», «зазнати», «у розмірі», «на рівні», «у сумі»: «досягла п'ятисот п'ятдесяти цілих двох десятих мегавата». Інші файли без змін |
 | 1.6.3 | 2026-10-12 | `a9e05d197e8d1f27c5e1c2501d890549f60917ea` | `univoice-ui.js`: пункт меню «Наголошувач» перейменовано на «Покращувач». Інші файли без змін |
 | 1.7.0 | 2026-10-12 | `ff3c9787e982d664cd645cb4ed0e264207d4e15a` | `univoice-speech.js`: номер будинку з літерою («7Б» → «сім бе»), класи («у 7-Б класі»); «один мільйон»; «США» без змін; «1 Гбіт/с» → «один гігабіт на секунду», «м/с», «об/хв», «грн/кг» → «за кілограм»; «у XXI ст.» → «у двадцять першому столітті»; рід числа не зі службових слів («рейс PS 101 до…» → «сто один»); українські назви латиницею («Zaporizhzhia» → «Запоріжжя»), усталені бренди («Forum» → «Форум», «Excel» → «Ексель»); літера L — «ель». Інші файли без змін |
+| 1.7.1 | 2026-10-12 | `175f907bea6d88c53019ff447b7e173f789090a3` | `univoice-speech.js`: «одна тисяча…» в усіх числах від 1 000 (у відмінку «однієї тисячі», «одну тисячу»; у роках — «тисяча дев'ятсот…»); родовий після «сягала»; знахідний після дієслів («виробило одну тисячу»); одиниці т (тонна), А·год (ампер-година), А, В після числа завжди. Інші файли без змін |
 
-## Рядки для Tilda (поточна версія 1.7.0)
+## Рядки для Tilda (поточна версія 1.7.1)
 
 Усі сторінки:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@ff3c9787e982d664cd645cb4ed0e264207d4e15a/univoice-ui.css">
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@ff3c9787e982d664cd645cb4ed0e264207d4e15a/univoice-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@175f907bea6d88c53019ff447b7e173f789090a3/univoice-ui.css">
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@175f907bea6d88c53019ff447b7e173f789090a3/univoice-ui.js"></script>
 ```
 
 Сторінки, яким потрібен Хрономір або вербалізатор (калькулятор, Наголошувач), — ще один рядок:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@ff3c9787e982d664cd645cb4ed0e264207d4e15a/univoice-speech.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@175f907bea6d88c53019ff447b7e173f789090a3/univoice-speech.js"></script>
 ```
 
 Наголошувачу (вербалізатор) — ще й словник вимови англійських слів:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@ff3c9787e982d664cd645cb4ed0e264207d4e15a/univoice-en.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/univoiceua-collab/univoice-shared@175f907bea6d88c53019ff447b7e173f789090a3/univoice-en.js"></script>
 ```
